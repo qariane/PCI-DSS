@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PCI DSS Week 3 — Team Training Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090F;
+  --surface:#0D1421;
+  --surface2:#111B2E;
+  --border:rgba(99,179,237,0.12);
+  --border2:rgba(99,179,237,0.22);
+  --blue:#3B82F6;
+  --cyan:#06B6D4;
+  --gold:#F59E0B;
+  --green:#10B981;
+  --red:#EF4444;
+  --amber:#F97316;
+  --white:#E8F0FE;
+  --muted:#6B8099;
+  --dim:#3A4F68;
+  --head:'Syne',sans-serif;
+  --body:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--body);font-size:15px;line-height:1.65;overflow-x:hidden;min-height:100vh}
+::selection{background:var(--cyan);color:#000}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:2px}
+
+/* ─── GRID BG ─────────────────────────────────────────────────── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background-image:radial-gradient(circle at 20% 20%, rgba(59,130,246,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(6,182,212,0.04) 0%, transparent 50%),
+    linear-gradient(rgba(99,179,237,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(99,179,237,0.025) 1px,transparent 1px);
+  background-size:100% 100%,100% 100%,48px 48px,48px 48px;
+  pointer-events:none
+}
+
+/* ─── PRESENTER HEADER ────────────────────────────────────────── */
+.pres-header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(6,9,15,0.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:58px;gap:1rem;
+}
+.ph-left{display:flex;align-items:center;gap:14px}
+.ph-title{font-family:var(--head);font-size:14px;font-weight:700;letter-spacing:-.01em}
+.ph-title span{color:var(--cyan)}
+.ph-center{display:flex;gap:3px;align-items:center}
+.module-pill{
+  font-family:var(--mono);font-size:11px;padding:5px 14px;border-radius:20px;
+  border:1px solid var(--border);color:var(--muted);cursor:pointer;
+  transition:all .2s;background:none;white-space:nowrap
+}
+.module-pill:hover{border-color:var(--border2);color:var(--white)}
+.module-pill.active{background:rgba(59,130,246,.15);border-color:var(--blue);color:var(--blue)}
+.module-pill.done{border-color:rgba(16,185,129,.4);color:var(--green)}
+.ph-right{display:flex;align-items:center;gap:12px}
+.slide-counter{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.slide-counter b{color:var(--white)}
+.btn-nav{
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--white);padding:7px 18px;border-radius:6px;
+  font-family:var(--body);font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .2s;white-space:nowrap
+}
+.btn-nav:hover{background:var(--blue);border-color:var(--blue)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.btn-nav.primary{background:var(--blue);border-color:var(--blue)}
+.btn-nav.primary:hover{background:#2563EB}
+
+/* ─── PROGRESS RAIL ───────────────────────────────────────────── */
+.progress-rail{height:2px;background:var(--surface2);position:sticky;top:58px;z-index:199}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .4s ease}
+
+/* ─── SLIDE STAGE ─────────────────────────────────────────────── */
+.stage{
+  position:relative;z-index:1;
+  min-height:calc(100vh - 60px);
+  display:flex;flex-direction:column;
+}
+.slide{display:none;flex-direction:column;flex:1;padding:2.5rem 2rem 2rem;max-width:1080px;margin:0 auto;width:100%;animation:slideIn .35s ease}
+.slide.active{display:flex}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── SLIDE TYPES ─────────────────────────────────────────────── */
+
+/* TITLE SLIDE */
+.slide-title{justify-content:center;align-items:center;text-align:center;gap:1.5rem;padding:4rem 2rem}
+.slide-title .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cyan);text-transform:uppercase;margin-bottom:.5rem}
+.slide-title h1{font-family:var(--head);font-size:clamp(2.4rem,6vw,4rem);font-weight:800;letter-spacing:-.03em;line-height:1.05}
+.slide-title h1 em{font-style:normal;color:var(--cyan)}
+.slide-title .sub{color:var(--muted);font-size:1.1rem;max-width:560px;margin:.75rem auto 0;font-weight:300}
+.week-chips{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.w-chip{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:.75rem 1.25rem;text-align:center;
+  transition:all .2s;cursor:pointer
+}
+.w-chip:hover{border-color:var(--cyan);transform:translateY(-2px)}
+.w-chip .wc-num{font-family:var(--mono);font-size:1.5rem;font-weight:500;color:var(--cyan);display:block}
+.w-chip .wc-lbl{font-size:11px;color:var(--muted);letter-spacing:.06em}
+
+/* SECTION HEADER */
+.slide-section{justify-content:center;align-items:center;text-align:center;gap:1rem}
+.slide-section .s-num{font-family:var(--mono);font-size:3.5rem;font-weight:500;color:rgba(59,130,246,.2);line-height:1}
+.slide-section .s-label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cyan);margin-bottom:.5rem}
+.slide-section h2{font-family:var(--head);font-size:clamp(1.8rem,5vw,3rem);font-weight:800;letter-spacing:-.03em}
+.slide-section .s-desc{color:var(--muted);max-width:520px;margin:.75rem auto 0;font-size:.95rem}
+.s-tags{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.s-tag{font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:var(--blue)}
+
+/* CONTENT SLIDES */
+.slide-head{margin-bottom:1.75rem}
+.slide-head .s-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--cyan);text-transform:uppercase;margin-bottom:.4rem}
+.slide-head h2{font-family:var(--head);font-size:1.75rem;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+.slide-head .s-intro{color:#94A8C0;font-size:.95rem;margin-top:.5rem;max-width:700px}
+
+/* TWO COLUMN */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;flex:1}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.two-col,.three-col{grid-template-columns:1fr}}
+
+/* ─── CARDS & PANELS ──────────────────────────────────────────── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;position:relative;overflow:hidden}
+.panel-accent{border-left:3px solid var(--cyan)}
+.panel.gold{border-color:rgba(245,158,11,.25)}
+.panel.gold .p-icon{color:var(--gold)}
+.panel.green{border-color:rgba(16,185,129,.25)}
+.panel.green .p-icon{color:var(--green)}
+.panel.red{border-color:rgba(239,68,68,.2)}
+.panel .p-icon{font-size:1.6rem;margin-bottom:.75rem;display:block}
+.panel .p-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem}
+.panel h3{font-family:var(--head);font-size:1rem;font-weight:700;margin-bottom:.5rem}
+.panel p{font-size:.875rem;color:#8DAFC8;line-height:1.7}
+.panel strong{color:var(--white)}
+
+/* INFO TILES */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.875rem;margin:1.25rem 0}
+.tile{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem}
+.tile .t-val{font-family:var(--mono);font-size:1.25rem;font-weight:500;color:var(--cyan);display:block;margin-bottom:2px}
+.tile .t-key{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.tile .t-note{font-size:12px;color:#6B8099;margin-top:4px}
+
+/* ANALOGY BOX */
+.analogy{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:1.1rem 1.25rem;margin:1.25rem 0;display:flex;gap:12px}
+.analogy .bulb{font-size:1.5rem;flex-shrink:0;margin-top:2px}
+.analogy-body strong{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:4px}
+.analogy-body p{font-size:.875rem;color:#C5A94E;margin:0}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:1.25rem 0}
+.flow-node{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--white);white-space:nowrap}
+.flow-node.hi{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.4);color:var(--cyan)}
+.flow-node.ok{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.35);color:var(--green)}
+.flow-node.warn{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:var(--amber)}
+.flow-node.block{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--red)}
+.flow-arr{color:var(--dim);font-size:14px;padding:0 4px}
+
+/* CALLOUT LIST */
+.clist{list-style:none;display:flex;flex-direction:column;gap:.6rem;margin:1rem 0}
+.clist li{display:flex;gap:10px;align-items:flex-start;font-size:.875rem;color:#8DAFC8}
+.clist li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);flex-shrink:0;margin-top:7px}
+.clist li strong{color:var(--white)}
+
+/* COMPARISON TABLE */
+.ctable{width:100%;border-collapse:collapse;font-size:13px;margin:1rem 0}
+.ctable th{background:rgba(59,130,246,.15);color:var(--cyan);font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border2)}
+.ctable td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#94A8C0;vertical-align:top}
+.ctable tr:hover td{background:rgba(59,130,246,.04)}
+.ctable .c-allow{color:var(--green);font-family:var(--mono);font-size:11px;font-weight:500}
+.ctable .c-deny{color:var(--red);font-family:var(--mono);font-size:11px;font-weight:500}
+.ctable .c-restrict{color:var(--amber);font-family:var(--mono);font-size:11px;font-weight:500}
+.ctable .c-req{color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:500}
+
+/* PCI REQUIREMENT ROWS */
+.req-list{display:flex;flex-direction:column;gap:.6rem;margin:1rem 0}
+.req-row{display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem}
+.req-row .rr-num{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--cyan);white-space:nowrap;min-width:80px;padding-top:1px}
+.req-row .rr-body{font-size:.875rem;color:#8DAFC8}
+.req-row .rr-body strong{color:var(--white);display:block;margin-bottom:2px}
+
+/* HIGHLIGHT STAT */
+.stat-row{display:flex;gap:1rem;margin:1.25rem 0;flex-wrap:wrap}
+.stat-box{flex:1;min-width:130px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.1rem;text-align:center}
+.stat-box .sb-val{font-family:var(--head);font-size:2rem;font-weight:800;color:var(--cyan);display:block;line-height:1}
+.stat-box .sb-lbl{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.06em}
+
+/* ZONE DIAGRAM */
+.zone-stack{display:flex;flex-direction:column;gap:6px;margin:1rem 0}
+.zone-row{border-radius:8px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:12px;font-size:13px}
+.zone-row .zr-name{font-family:var(--mono);font-size:11px;font-weight:500;min-width:140px}
+.zone-row .zr-desc{color:#7A9AB8;font-size:12px}
+.zone-row .zr-trust{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:auto;white-space:nowrap}
+.z-internet{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2)}.z-internet .zr-name{color:#EF9999}.z-internet .zr-trust{background:rgba(239,68,68,.15);color:var(--red)}
+.z-dmz{background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2)}.z-dmz .zr-name{color:#FDBA74}.z-dmz .zr-trust{background:rgba(249,115,22,.15);color:var(--amber)}
+.z-app{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2)}.z-app .zr-name{color:#93C5FD}.z-app .zr-trust{background:rgba(59,130,246,.15);color:var(--blue)}
+.z-cde{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25)}.z-cde .zr-name{color:#6EE7B7}.z-cde .zr-trust{background:rgba(16,185,129,.15);color:var(--green)}
+.z-admin{background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2)}.z-admin .zr-name{color:#C4B5FD}.z-admin .zr-trust{background:rgba(139,92,246,.15);color:#A78BFA}
+.z-siem{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.18)}.z-siem .zr-name{color:#67E8F9}.z-siem .zr-trust{background:rgba(6,182,212,.12);color:var(--cyan)}
+
+/* GLOSSARY OVERLAY */
+.gloss-toggle{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:300;
+  background:var(--blue);color:var(--white);border:none;
+  width:48px;height:48px;border-radius:50%;font-size:1.1rem;
+  cursor:pointer;box-shadow:0 4px 20px rgba(59,130,246,.5);
+  transition:all .2s
+}
+.gloss-toggle:hover{transform:scale(1.1)}
+.gloss-panel{
+  position:fixed;right:0;top:0;bottom:0;width:min(420px,100vw);z-index:400;
+  background:var(--surface);border-left:1px solid var(--border2);
+  transform:translateX(100%);transition:transform .3s ease;
+  display:flex;flex-direction:column;overflow:hidden
+}
+.gloss-panel.open{transform:translateX(0)}
+.gloss-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.gloss-header h3{font-family:var(--head);font-size:1rem;font-weight:700}
+.gloss-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:4px}
+.gloss-close:hover{color:var(--white)}
+.gloss-search{padding:.75rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.gloss-search input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--white);font-family:var(--body);font-size:13px;outline:none}
+.gloss-search input:focus{border-color:var(--cyan)}
+.gloss-search input::placeholder{color:var(--muted)}
+.gloss-filters{padding:.6rem 1.25rem;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.gf-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:12px;font-size:11px;cursor:pointer;transition:all .2s}
+.gf-btn.active,.gf-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.gloss-body{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.6rem}
+.g-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem}
+.g-item .gi-term{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--cyan);margin-bottom:4px}
+.g-item .gi-cat{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.g-item .gi-def{font-size:12px;color:#7A9AB8;line-height:1.6}
+.g-item.hidden{display:none}
+
+/* SLIDE NUMBERS BOTTOM */
+.slide-dots-wrap{display:flex;gap:4px;align-items:center;justify-content:center;padding:1rem 0;position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--border);z-index:100}
+.s-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);cursor:pointer;transition:all .2s}
+.s-dot.active{background:var(--blue);width:18px;border-radius:3px}
+.s-dot.done{background:var(--green)}
+
+/* PRESENTER CONTROLS */
+.pres-controls{display:flex;align-items:center;gap:8px}
+
+/* KEYBOARD HINT */
+.kb-hint{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.04em}
+kbd{background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+@media(max-width:640px){
+  .pres-header{padding:0 1rem}
+  .ph-center{display:none}
+  .kb-hint{display:none}
+  .slide{padding:1.5rem 1rem 1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="pres-header">
+  <div class="ph-left">
+    <span class="ph-title">PCI DSS <span>Week 3</span></span>
+  </div>
+  <div class="ph-center">
+    <button class="module-pill active" onclick="jumpModule(0)" id="pill-0">Intro</button>
+    <button class="module-pill" onclick="jumpModule(1)" id="pill-1">01 API Security</button>
+    <button class="module-pill" onclick="jumpModule(2)" id="pill-2">02 Tokenization</button>
+    <button class="module-pill" onclick="jumpModule(3)" id="pill-3">03 Network</button>
+    <button class="module-pill" onclick="jumpModule(4)" id="pill-4">Validation</button>
+    <button class="module-pill" onclick="jumpModule(5)" id="pill-5">Glossary</button>
+  </div>
+  <div class="ph-right">
+    <span class="kb-hint"><kbd>←</kbd><kbd>→</kbd> navigate</span>
+    <span class="slide-counter">Slide <b id="cur-slide">1</b> / <b id="tot-slides">1</b></span>
+    <div class="pres-controls">
+      <button class="btn-nav" id="btn-prev" onclick="prevSlide()" disabled>← Prev</button>
+      <button class="btn-nav primary" id="btn-next" onclick="nextSlide()">Next →</button>
+    </div>
+  </div>
+</header>
+<div class="progress-rail"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+
+<!-- STAGE -->
+<div class="stage" id="stage">
+
+<!-- ════════════════════════════════════════════════════════
+     INTRO MODULE  (slides 0–3)
+════════════════════════════════════════════════════════ -->
+
+<!-- SLIDE 0: TITLE -->
+<div class="slide slide-title active" data-module="0" data-notes="Welcome your team. Tell them this session covers exactly what was built in Week 3 — not theory, but the actual controls we are deploying right now.">
+  <div class="eyebrow">Mastercard · PCI DSS Programme</div>
+  <h1>Week 3: <em>Technical</em><br/>Implementation</h1>
+  <p class="sub">A guided walkthrough of how we secure APIs, tokenize cardholder data, and protect our network — and why every control maps to a specific PCI DSS requirement.</p>
+  <div class="week-chips">
+    <div class="w-chip"><span class="wc-num">01</span><span class="wc-lbl">API Security</span></div>
+    <div class="w-chip"><span class="wc-num">02</span><span class="wc-lbl">Tokenization</span></div>
+    <div class="w-chip"><span class="wc-num">03</span><span class="wc-lbl">Network</span></div>
+    <div class="w-chip"><span class="wc-num">04</span><span class="wc-lbl">Validation</span></div>
+  </div>
+</div>
+
+<!-- SLIDE 1: WHAT WE'RE DOING THIS WEEK -->
+<div class="slide" data-module="0" data-notes="Explain the shift: last week we identified what could go wrong. This week we build the actual defences. Emphasise 'defense in depth' — no single control is enough on its own.">
+  <div class="slide-head">
+    <div class="s-kicker">Context</div>
+    <h2>What are we doing this week?</h2>
+    <p class="s-intro">Week 3 is where we move from identifying risk to actively closing it. Three layers of protection, all working together.</p>
+  </div>
+  <div class="three-col">
+    <div class="panel panel-accent">
+      <span class="p-icon">🔐</span>
+      <div class="p-label">Layer 1</div>
+      <h3>API Security</h3>
+      <p>Every system that communicates with Mastercard must prove its identity, prove its permissions, and behave within expected limits.</p>
+    </div>
+    <div class="panel panel-accent">
+      <span class="p-icon">💳</span>
+      <div class="p-label">Layer 2</div>
+      <h3>Tokenization</h3>
+      <p>Real card numbers are replaced with meaningless tokens the instant they are captured — so they never travel through our systems in a usable form.</p>
+    </div>
+    <div class="panel panel-accent">
+      <span class="p-icon">🌐</span>
+      <div class="p-label">Layer 3</div>
+      <h3>Network Security</h3>
+      <p>A strict boundary separates where cardholder data lives from everything else. If an attacker gets in somewhere, they cannot reach the vault.</p>
+    </div>
+  </div>
+  <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>Defence in Depth</strong><p>Think of it like a medieval castle: outer walls stop most attackers, the inner keep stops whoever gets past, and the vault inside the keep stops anyone who gets through that. Each layer assumes the previous one will sometimes fail.</p></div></div>
+</div>
+
+<!-- SLIDE 2: THE GOAL -->
+<div class="slide" data-module="0" data-notes="Keep this slide short. The goal is simple: protect cardholder data in alignment with PCI DSS. Ask the team: what does PCI DSS mean to us day-to-day?">
+  <div class="slide-head">
+    <div class="s-kicker">Our Objective</div>
+    <h2>The Goal</h2>
+  </div>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="panel" style="margin-bottom:1rem;border-color:rgba(6,182,212,.3)">
+        <div class="p-label">Primary Goal</div>
+        <h3 style="font-size:1.3rem;color:var(--cyan);font-family:var(--head)">Secure Mastercard systems in alignment with PCI DSS</h3>
+        <p style="margin-top:.75rem">Every control we implement this week directly maps to a PCI DSS requirement. Nothing we build is arbitrary — it all serves compliance and security simultaneously.</p>
+      </div>
+      <div class="tiles">
+        <div class="tile"><span class="t-val">12</span><div class="t-key">PCI DSS Reqs</div><div class="t-note">Requirements 1, 3, 4, 7, 8, 10, 11 are directly addressed this week</div></div>
+        <div class="tile"><span class="t-val">3</span><div class="t-key">Control Layers</div><div class="t-note">API + Tokenization + Network = complete coverage</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="p-label" style="margin-bottom:.75rem;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted)">PCI DSS Requirements We Cover</div>
+      <div class="req-list">
+        <div class="req-row"><span class="rr-num">Req. 1</span><div class="rr-body"><strong>Install & maintain firewalls</strong>Protect the network perimeter and CDE</div></div>
+        <div class="req-row"><span class="rr-num">Req. 3</span><div class="rr-body"><strong>Protect stored cardholder data</strong>Tokenization eliminates PAN storage risk</div></div>
+        <div class="req-row"><span class="rr-num">Req. 4</span><div class="rr-body"><strong>Encrypt data in transit</strong>TLS 1.2+ and mTLS on all API traffic</div></div>
+        <div class="req-row"><span class="rr-num">Req. 7 & 8</span><div class="rr-body"><strong>Restrict & authenticate access</strong>OAuth, RBAC, MFA across all layers</div></div>
+        <div class="req-row"><span class="rr-num">Req. 10 & 11</span><div class="rr-body"><strong>Log, monitor, and test</strong>SIEM, anomaly detection, pen testing</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: HOW TO READ THIS TRAINING -->
+<div class="slide" data-module="0" data-notes="Tell your team how this session works: you walk through each deliverable, explain the why, show the actual config. Use the glossary button (bottom right) if anyone needs a term defined mid-session.">
+  <div class="slide-head">
+    <div class="s-kicker">Before We Begin</div>
+    <h2>How this training is structured</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <ul class="clist">
+        <li><strong>Three deliverables, three modules.</strong> We go through each one in order — API Config Sheet, Tokenization Overview, Firewall Rules.</li>
+        <li><strong>Every concept has an analogy.</strong> If something feels abstract, look for the gold box — it translates the technical idea into something real.</li>
+        <li><strong>Every control maps to PCI DSS.</strong> At the end of each module we show exactly which requirement it satisfies and why.</li>
+        <li><strong>Glossary is always available.</strong> Hit the blue button bottom-right any time to look up a term, or jump to the Glossary slide from the nav above.</li>
+      </ul>
+    </div>
+    <div class="panel gold">
+      <span class="p-icon">📋</span>
+      <div class="p-label">Three Deliverables</div>
+      <div class="req-list">
+        <div class="req-row" style="background:var(--bg)"><span class="rr-num" style="color:var(--gold)">D-01</span><div class="rr-body"><strong>API Config Sheet</strong>Authentication, authorization, rate limiting & monitoring</div></div>
+        <div class="req-row" style="background:var(--bg)"><span class="rr-num" style="color:var(--gold)">D-02</span><div class="rr-body"><strong>Tokenization Overview</strong>PAN replacement, token design, HSM vault architecture</div></div>
+        <div class="req-row" style="background:var(--bg)"><span class="rr-num" style="color:var(--gold)">D-03</span><div class="rr-body"><strong>Firewall Rules</strong>10 named rules, zone design, default deny model</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     MODULE 1: API SECURITY  (slides 4–13)
+════════════════════════════════════════════════════════ -->
+
+<!-- SLIDE 4: API SECTION HEADER -->
+<div class="slide slide-section" data-module="1" data-notes="Big moment — announce Module 1. Ask the team: when two of our systems need to talk to each other, how does one system know it can trust the other?">
+  <div class="s-num">01</div>
+  <div class="s-label">Deliverable One</div>
+  <h2>API Security</h2>
+  <p class="s-desc">How we make sure only trusted, authorised systems can communicate with Mastercard — and how we detect the ones that shouldn't be.</p>
+  <div class="s-tags"><span class="s-tag">mTLS</span><span class="s-tag">OAuth 2.0</span><span class="s-tag">Rate Limiting</span><span class="s-tag">Anomaly Detection</span><span class="s-tag">SIEM</span></div>
+</div>
+
+<!-- SLIDE 5: THE PROBLEM WITH APIS -->
+<div class="slide" data-module="1" data-notes="Set up the problem before showing the solution. APIs are powerful because they let systems talk — but that openness is also the risk. Anyone who knows the address and format can try to send requests.">
+  <div class="slide-head">
+    <div class="s-kicker">The Problem We're Solving</div>
+    <h2>Why API security is not optional</h2>
+    <p class="s-intro">APIs are the front door to Mastercard's payment systems. Without proper controls, that door is open to anyone who can find it.</p>
+  </div>
+  <div class="three-col">
+    <div class="panel red">
+      <span class="p-icon">🚪</span>
+      <h3>No Identity Check</h3>
+      <p>Without mTLS, any system on the internet can send requests pretending to be a legitimate partner. <strong>We cannot tell the difference.</strong></p>
+    </div>
+    <div class="panel red">
+      <span class="p-icon">🔓</span>
+      <h3>Over-permissioned Access</h3>
+      <p>Without OAuth scopes, a system that should only read transaction status could also trigger payments. <strong>Least privilege is not enforced.</strong></p>
+    </div>
+    <div class="panel red">
+      <span class="p-icon">💥</span>
+      <h3>No Abuse Prevention</h3>
+      <p>Without rate limiting, a single compromised client can flood our APIs with millions of card enumeration requests. <strong>We wouldn't know until the damage was done.</strong></p>
+    </div>
+  </div>
+  <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The Real Risk</strong><p>In 2019, a major US retailer lost 100 million customer records because their API had no authentication on an internal endpoint. The attacker simply knew the URL. No password. No certificate. Nothing.</p></div></div>
+</div>
+
+<!-- SLIDE 6: mTLS EXPLAINED -->
+<div class="slide" data-module="1" data-notes="Walk through the analogy slowly. Make sure everyone understands that BOTH sides present a certificate — not just the server. Draw the two-way arrow on a whiteboard if helpful.">
+  <div class="slide-head">
+    <div class="s-kicker">Control 1 of 4</div>
+    <h2>Mutual TLS (mTLS) — The Two-Way ID Check</h2>
+    <p class="s-intro">In standard HTTPS, only the server proves who it is. In mTLS, <strong style="color:var(--white)">both sides present a certificate</strong> before a single byte of data is exchanged.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="flow">
+        <div class="flow-node warn">Client wants to connect</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node hi">Server presents certificate</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node hi">Client presents certificate</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node ok">Both verified → Connection opens</div>
+      </div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>Two Government Agents</strong><p>Two agents from different agencies meet to share intelligence. Neither talks until both have seen the other's badge, checked it's not expired, and confirmed it hasn't been revoked. Only then do they share anything.</p></div></div>
+      <ul class="clist">
+        <li><strong>Prevents MITM attacks</strong> — nobody can silently sit between two systems</li>
+        <li><strong>Blocks impersonation</strong> — a fake system cannot forge a valid certificate</li>
+        <li><strong>Certificate rotation every 90 days</strong> — limits damage if one is compromised</li>
+      </ul>
+    </div>
+    <div class="tiles" style="align-content:start;display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+      <div class="tile"><span class="t-val">TLS 1.3</span><div class="t-key">Preferred Version</div><div class="t-note">1.2 minimum — older versions have known vulnerabilities</div></div>
+      <div class="tile"><span class="t-val">90 days</span><div class="t-key">Cert Rotation</div><div class="t-note">Automatic — limits exposure window after compromise</div></div>
+      <div class="tile"><span class="t-val">CRL</span><div class="t-key">Revocation Check</div><div class="t-note">Certificate Revocation List — instantly blocks stolen certs</div></div>
+      <div class="tile"><span class="t-val">OCSP</span><div class="t-key">Real-time Check</div><div class="t-note">Online Certificate Status Protocol — faster than CRL</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: OAUTH 2.0 -->
+<div class="slide" data-module="1" data-notes="Distinguish clearly: mTLS answers WHO is connecting. OAuth answers WHAT they're allowed to do once connected. The valet analogy works well for non-technical team members.">
+  <div class="slide-head">
+    <div class="s-kicker">Control 2 of 4</div>
+    <h2>OAuth 2.0 — Permission, Not Just Identity</h2>
+    <p class="s-intro">mTLS proves <em>who</em> a system is. OAuth 2.0 proves <em>what that system is allowed to do</em> — with short-lived tokens that expire before they can be reused.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>Valet Parking Ticket</strong><p>A valet gets a ticket that lets them park your car — and nothing else. They can't open the glove box, they can't drive to another city, and the ticket expires when you leave. OAuth tokens work exactly like this.</p></div></div>
+      <div class="req-list">
+        <div class="req-row"><span class="rr-num" style="color:var(--white)">Issuer</span><div class="rr-body">Who created the token? Must match our auth server.</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--white)">Audience</span><div class="rr-body">Which API is this token for? Reject if wrong service.</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--white)">Expiry</span><div class="rr-body">Is it still valid? Reject if expired — even by 1 second.</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--white)">Scope</span><div class="rr-body">What is this token permitted to do? Reject requests outside scope.</div></div>
+      </div>
+    </div>
+    <div class="tiles" style="align-content:start;display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+      <div class="tile"><span class="t-val">JWT</span><div class="t-key">Token Format</div><div class="t-note">JSON Web Token — signed and self-verifiable</div></div>
+      <div class="tile"><span class="t-val">15 min</span><div class="t-key">Access Token Life</div><div class="t-note">Short life = tiny attack window if stolen</div></div>
+      <div class="tile"><span class="t-val">24 hrs</span><div class="t-key">Refresh Token Life</div><div class="t-note">Get a new access token without re-authenticating</div></div>
+      <div class="tile"><span class="t-val">Scoped</span><div class="t-key">Least Privilege</div><div class="t-note">Each token covers only what the system needs</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: RATE LIMITING -->
+<div class="slide" data-module="1" data-notes="Rate limiting stops brute-force and enumeration attacks. Anomaly detection catches sophisticated attackers who stay under the limit but behave strangely. Explain how these two work together.">
+  <div class="slide-head">
+    <div class="s-kicker">Control 3 of 4</div>
+    <h2>Rate Limiting & Anomaly Detection</h2>
+    <p class="s-intro">Rate limiting caps volume. Anomaly detection catches attackers smart enough to stay under the cap but suspicious enough to trigger an alert.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The ATM Analogy</strong><p>A bank limits PIN attempts to 3 per card — that's rate limiting. Anomaly detection is the security system noticing someone is trying a different card at every ATM in the building, one attempt per machine. Each machine sees nothing unusual. The security system sees everything.</p></div></div>
+      <ul class="clist">
+        <li><strong>Rate limiting:</strong> 100 requests/min per client. Burst allows 200 for brief spikes. Sustained abuse is blocked.</li>
+        <li><strong>HTTP 429:</strong> The standard "Too Many Requests" response. The client must back off and retry.</li>
+        <li><strong>Anomaly detection:</strong> Baseline of normal traffic established. Anything more than 20% above baseline triggers a SIEM alert.</li>
+        <li><strong>Automated response:</strong> Alert → investigate → throttle or block session automatically.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="tiles" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="tile"><span class="t-val">100/min</span><div class="t-key">Standard Limit</div></div>
+        <div class="tile"><span class="t-val">200/min</span><div class="t-key">Burst Limit</div></div>
+        <div class="tile"><span class="t-val">HTTP 429</span><div class="t-key">Rate Exceeded</div></div>
+        <div class="tile"><span class="t-val">&gt;20%</span><div class="t-key">Alert Threshold</div></div>
+      </div>
+      <div class="panel" style="margin-top:.875rem">
+        <div class="p-label">What Anomaly Detection Watches For</div>
+        <ul class="clist" style="margin:0">
+          <li>Traffic spikes above the 20% baseline threshold</li>
+          <li>Rapid sequential card number queries (enumeration)</li>
+          <li>Requests from unusual geographic locations</li>
+          <li>Multiple failed authentication attempts in a short window</li>
+          <li>Patterns consistent with automated bot activity</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: API MONITORING -->
+<div class="slide" data-module="1" data-notes="Monitoring is not optional under PCI DSS Requirement 10. Walk through what gets logged and why 90 days matters for forensic investigations.">
+  <div class="slide-head">
+    <div class="s-kicker">Control 4 of 4</div>
+    <h2>Monitoring & Logging — If It Isn't Logged, It Didn't Happen</h2>
+    <p class="s-intro">Every API request, success or failure, is logged to our SIEM. Without this, we cannot investigate incidents or prove compliance during an audit.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="p-label">What We Log on Every API Call</div>
+        <ul class="clist" style="margin:.5rem 0 0">
+          <li>Timestamp, source IP, destination endpoint</li>
+          <li>Authentication result (success / failure + reason)</li>
+          <li>HTTP method, status code, response time</li>
+          <li>OAuth token claims (issuer, audience, scope)</li>
+          <li>Certificate identity (for mTLS connections)</li>
+          <li>Rate limit status and any throttle events</li>
+        </ul>
+      </div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>Why Logs Matter</strong><p>When a breach is discovered, the first question is always "how long has this been going on?" Without logs, you cannot answer that. With 90 days of logs in SIEM, you can trace exactly when an attacker first appeared, what they accessed, and what they tried.</p></div></div>
+    </div>
+    <div>
+      <div class="tiles" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.875rem">
+        <div class="tile"><span class="t-val">90 days</span><div class="t-key">Log Retention</div><div class="t-note">Minimum required by PCI DSS</div></div>
+        <div class="tile"><span class="t-val">Real-time</span><div class="t-key">Alert Delivery</div><div class="t-note">SIEM alerts fire within seconds</div></div>
+      </div>
+      <div class="panel green">
+        <div class="p-label">SIEM Alerts Configured</div>
+        <ul class="clist" style="margin:.5rem 0 0">
+          <li>Traffic spike &gt;20% above baseline</li>
+          <li>5 or more failed auth attempts in 60 seconds</li>
+          <li>First-time access from a new geographic region</li>
+          <li>API calls outside defined business hours</li>
+          <li>Any request matching known attack signatures</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: API CONFIG TABLE -->
+<div class="slide" data-module="1" data-notes="This is the actual deliverable — the API Config Sheet. Walk through each row. Give the team time to read it. This is the document they will reference when configuring systems.">
+  <div class="slide-head">
+    <div class="s-kicker">Deliverable 1 — API Config Sheet</div>
+    <h2>The Complete API Configuration</h2>
+    <p class="s-intro">This is the reference document. Every system that connects to Mastercard APIs must comply with every row in this table.</p>
+  </div>
+  <table class="ctable">
+    <thead><tr><th>Category</th><th>Configuration</th><th>Key Settings</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:var(--white)">Authentication & Encryption</strong></td><td>mTLS + TLS Enforcement</td><td>TLS 1.2+ (1.3 preferred) · mTLS at API Gateway · Cert rotation every 90 days · CRL/OCSP validation</td><td>Verifies both client and server identities; prevents MITM</td></tr>
+      <tr><td><strong style="color:var(--white)">Authorization</strong></td><td>OAuth 2.0 Token Control</td><td>JWT tokens · Access: 15 min · Refresh: 24 hrs · Scope-based · Tokens bound to client cert</td><td>Enforces least privilege; prevents credential exposure</td></tr>
+      <tr><td><strong style="color:var(--white)">Rate Limiting</strong></td><td>Traffic Control</td><td>100 req/min per client · Burst: 200 · HTTP 429 on exceed · Enforced at API Gateway/WAF</td><td>Prevents DDoS and API abuse; maintains availability</td></tr>
+      <tr><td><strong style="color:var(--white)">Monitoring & Logging</strong></td><td>Security Monitoring</td><td>Log all API activity · SIEM integration · Alerts on &gt;20% spikes · 90-day log retention</td><td>Real-time detection and audit traceability</td></tr>
+      <tr><td><strong style="color:var(--white)">API Security Policies</strong></td><td>Standard Enforcement</td><td>mTLS + OAuth required on all APIs · Least privilege · Mandatory rate limiting · Secure error handling</td><td>Consistent security baseline across all APIs</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SLIDE 11: API PCI MAPPING -->
+<div class="slide" data-module="1" data-notes="Connect every control back to a specific PCI DSS requirement. Team members in compliance roles especially need to see this link clearly.">
+  <div class="slide-head">
+    <div class="s-kicker">Compliance Alignment</div>
+    <h2>API Security → PCI DSS Requirements</h2>
+    <p class="s-intro">None of these controls exist because they sound good. Each one satisfies a specific, auditable PCI DSS requirement.</p>
+  </div>
+  <div class="req-list">
+    <div class="req-row"><span class="rr-num">Req. 4</span><div class="rr-body"><strong>Encrypt data in transmission</strong>TLS 1.2+ and mTLS enforced at the API Gateway on every connection. No unencrypted API traffic is permitted.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 7</span><div class="rr-body"><strong>Restrict access by business need</strong>OAuth 2.0 scoped tokens mean each API client only accesses exactly what its job requires. Nothing more.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 8</span><div class="rr-body"><strong>Identify and authenticate users</strong>mTLS certificate identity combined with JWT validation ensures every caller is cryptographically verified on every request.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 10</span><div class="rr-body"><strong>Log and monitor all access</strong>All API activity is logged to SIEM with 90-day retention. Real-time alerts fire on anomalies and failed authentication.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 11</span><div class="rr-body"><strong>Test security of systems regularly</strong>Rate limiting thresholds and anomaly detection baselines are validated through regular security testing.</div></div>
+  </div>
+  <div class="analogy" style="margin-top:1rem"><span class="bulb">💡</span><div class="analogy-body"><strong>Key Takeaway for the Team</strong><p>mTLS answers WHO can connect. OAuth answers WHAT they can do. Rate limiting and detection answers HOW they behave. Together they provide end-to-end API protection.</p></div></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     MODULE 2: TOKENIZATION  (slides 12–20)
+════════════════════════════════════════════════════════ -->
+
+<!-- SLIDE 12: TOKENIZATION SECTION HEADER -->
+<div class="slide slide-section" data-module="2" data-notes="Start Module 2. Ask the team: what happens to the card number after a customer pays? Where does it go? Most people don't know — this module answers that.">
+  <div class="s-num">02</div>
+  <div class="s-label">Deliverable Two</div>
+  <h2>Tokenization</h2>
+  <p class="s-desc">How we make sure the real card number disappears from our systems the moment it is captured — and never appears again.</p>
+  <div class="s-tags"><span class="s-tag">PAN</span><span class="s-tag">Tokens</span><span class="s-tag">HSM</span><span class="s-tag">Token Vault</span><span class="s-tag">AES-256</span><span class="s-tag">FIPS 140-2</span></div>
+</div>
+
+<!-- SLIDE 13: WHAT IS A PAN -->
+<div class="slide" data-module="2" data-notes="Make sure everyone understands what a PAN is and why it is dangerous before explaining tokenization. The 'scope' concept is important — the more systems that touch PAN, the bigger the compliance burden.">
+  <div class="slide-head">
+    <div class="s-kicker">The Asset We're Protecting</div>
+    <h2>What is a PAN and why is it so valuable?</h2>
+    <p class="s-intro">The Primary Account Number is the most sensitive element in a payment transaction. Every system that sees it becomes a target — and a compliance scope item.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel" style="border-color:rgba(239,68,68,.25);margin-bottom:1rem">
+        <div class="p-label">PAN — Primary Account Number</div>
+        <div style="font-family:var(--mono);font-size:2rem;letter-spacing:.2em;color:var(--red);margin:.5rem 0">4532 •••• •••• 1234</div>
+        <p>The 16-digit card number. If an attacker obtains this, they can make fraudulent transactions immediately. It is the single most valuable piece of data in our environment.</p>
+      </div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The Scope Problem</strong><p>Imagine the PAN travels through 20 systems before the transaction settles. That means 20 systems are now in scope for PCI DSS — each one needs to be audited, tested, and secured. Tokenization reduces that number to 1.</p></div></div>
+    </div>
+    <div>
+      <div class="p-label" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:.75rem">Risk Without Tokenization</div>
+      <div class="req-list">
+        <div class="req-row"><span class="rr-num" style="color:var(--red)">Risk 1</span><div class="rr-body"><strong>Database breach</strong>PAN stored in a database → one breach exposes all customers</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--red)">Risk 2</span><div class="rr-body"><strong>Log injection</strong>PAN accidentally appears in application logs → any log access = PAN access</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--red)">Risk 3</span><div class="rr-body"><strong>Insider threat</strong>Developer with database access can query PAN for any customer</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--red)">Risk 4</span><div class="rr-body"><strong>Wide compliance scope</strong>Every system that touches PAN must be PCI DSS audited</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: HOW TOKENIZATION WORKS -->
+<div class="slide" data-module="2" data-notes="Walk through the flow step by step. Point to each node as you explain it. The key message: after step 4, the PAN is gone from everything except the vault.">
+  <div class="slide-head">
+    <div class="s-kicker">The Core Mechanism</div>
+    <h2>How Tokenization Works — Step by Step</h2>
+    <p class="s-intro">The PAN is captured once, replaced immediately, and never seen again by any business system.</p>
+  </div>
+  <div class="flow" style="flex-direction:column;gap:.6rem;margin:1.25rem 0">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right">①</div>
+      <div class="flow-node warn" style="flex:1;padding:.7rem 1rem">Customer enters PAN at payment terminal</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right">②</div>
+      <div class="flow-node hi" style="flex:1;padding:.7rem 1rem">PAN is encrypted in transit using TLS 1.2+ — nobody can intercept it</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right">③</div>
+      <div class="flow-node hi" style="flex:1;padding:.7rem 1rem">Tokenization service receives the PAN — this is the last system that ever sees it</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right">④</div>
+      <div class="flow-node ok" style="flex:1;padding:.7rem 1rem">A random, unique token is generated — no mathematical link to the PAN</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right">⑤</div>
+      <div class="flow-node" style="flex:1;padding:.7rem 1rem;border-color:rgba(139,92,246,.4)">PAN is encrypted with AES-256 and stored in the HSM-protected vault. PAN leaves this vault for nothing.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right">⑥</div>
+      <div class="flow-node ok" style="flex:1;padding:.7rem 1rem">Token is returned to the application. All downstream systems, databases, and logs use only the token.</div>
+    </div>
+  </div>
+  <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The Cloakroom Ticket</strong><p>You hand in your coat (PAN) at the cloakroom. You get a numbered ticket (token). You use the ticket number for everything — telling friends, paying, proving ownership. The coat stays locked in the back. If someone steals your ticket, they just have a number. They cannot get the coat without matching ID.</p></div></div>
+</div>
+
+<!-- SLIDE 15: IRREVERSIBLE TOKENS -->
+<div class="slide" data-module="2" data-notes="Explain why 'random' is not enough — the token generation algorithm must be non-deterministic. If there's a formula, a sophisticated attacker can work backwards. Spend time on this — it's a subtle but critical point.">
+  <div class="slide-head">
+    <div class="s-kicker">Token Design</div>
+    <h2>Irreversible Tokens — Why "Random" Is Not Enough</h2>
+    <p class="s-intro">Token generation must be non-deterministic. If there is any pattern or formula linking a token to its PAN, a determined attacker can reverse-engineer it.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel red" style="margin-bottom:1rem">
+        <div class="p-label">❌ Weak Token Design (Deterministic)</div>
+        <p>A formula converts PAN → Token. Given enough PAN-token pairs, an attacker can discover the formula and reverse every token in the database back to real PANs.</p>
+      </div>
+      <div class="panel green">
+        <div class="p-label">✓ Strong Token Design (Non-Deterministic)</div>
+        <p>The same PAN tokenized twice produces two completely different, unrelated tokens. There is no formula. You cannot work backwards. The only way to find the PAN is to query the vault — which requires breaking through all the access controls.</p>
+      </div>
+    </div>
+    <div>
+      <div class="tiles" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.875rem">
+        <div class="tile"><span class="t-val">Random</span><div class="t-key">Generation</div><div class="t-note">Cryptographically random — no predictable pattern</div></div>
+        <div class="tile"><span class="t-val">Unique</span><div class="t-key">Per Transaction</div><div class="t-note">Same PAN = different token each time</div></div>
+        <div class="tile"><span class="t-val">No Link</span><div class="t-key">To PAN</div><div class="t-note">Zero mathematical relationship</div></div>
+        <div class="tile"><span class="t-val">FPE Only</span><div class="t-key">When Needed</div><div class="t-note">Format-preserving only for legacy system compatibility</div></div>
+      </div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The Lottery Ticket</strong><p>Replace your passport number with a random lottery number. There is no conversion formula. Even if someone collects a million lottery numbers, they cannot find a single real passport. That is what non-deterministic means.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 16: HSM VAULT -->
+<div class="slide" data-module="2" data-notes="The HSM is the most technical part of this module. Use the bank vault analogy. The key point: the keys to decrypt PAN are physically locked inside the HSM hardware — they cannot be extracted even by someone with full system access.">
+  <div class="slide-head">
+    <div class="s-kicker">The Protected Storage</div>
+    <h2>The HSM-Protected Token Vault</h2>
+    <p class="s-intro">The vault stores the PAN-to-token mapping. A Hardware Security Module protects the encryption keys — ensuring they can never be extracted, even by someone with server access.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The Bank Vault Analogy</strong><p>The vault room holds the contents (PAN mappings). The HSM is the combination — stored inside a physical safe that's bolted to the floor. The safe performs the unlocking operation internally. The combination never leaves. You cannot extract it with software, you cannot copy it. The only way in is through the safe's own mechanism.</p></div></div>
+      <ul class="clist">
+        <li><strong>FIPS 140-2/3 compliant</strong> — US government standard for cryptographic hardware</li>
+        <li><strong>AES-256 encryption</strong> — industry standard for data at rest</li>
+        <li><strong>Keys never leave HSM</strong> — all encryption/decryption happens inside the device</li>
+        <li><strong>Key rotation enforced</strong> — regular rotation limits exposure if keys are ever compromised</li>
+        <li><strong>RBAC + MFA</strong> — role-based access with multi-factor authentication required</li>
+      </ul>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="p-label">Vault Access Controls</div>
+        <table class="ctable" style="margin:.75rem 0 0">
+          <thead><tr><th>Layer</th><th>Control</th></tr></thead>
+          <tbody>
+            <tr><td>Network</td><td>Isolated in CDE, no direct internet path</td></tr>
+            <tr><td>Authentication</td><td>MFA required for all privileged access</td></tr>
+            <tr><td>Authorization</td><td>RBAC — only approved roles can query vault</td></tr>
+            <tr><td>Encryption</td><td>AES-256 at rest, TLS 1.2+ in transit</td></tr>
+            <tr><td>Key Management</td><td>Keys generated and stored in HSM only</td></tr>
+            <tr><td>Audit</td><td>All vault access logged to SIEM</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 17: TOKENIZATION OVERVIEW TABLE -->
+<div class="slide" data-module="2" data-notes="This is Deliverable 2 — the Tokenization Overview. Walk through each row. Pay special attention to the Segmentation row — it connects directly to Module 3.">
+  <div class="slide-head">
+    <div class="s-kicker">Deliverable 2 — Tokenization Overview</div>
+    <h2>The Complete Tokenization Architecture</h2>
+    <p class="s-intro">Every component of the tokenization system and the security outcome it delivers.</p>
+  </div>
+  <table class="ctable">
+    <thead><tr><th>Component</th><th>Key Design Details</th><th>Security Outcome</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:var(--white)">Real-Time PAN Tokenization</strong></td><td>PAN tokenized at point of capture · TLS 1.2+ in transit · Token returned to application · PAN stored only in vault</td><td>Eliminates PAN exposure across all downstream systems</td></tr>
+      <tr><td><strong style="color:var(--white)">Irreversible Tokens</strong></td><td>Non-deterministic generation · No mathematical link to PAN · Unique per transaction · FPE for legacy only</td><td>Prevents reverse-engineering; tokens safe to store and transmit</td></tr>
+      <tr><td><strong style="color:var(--white)">HSM-Protected Vault</strong></td><td>FIPS 140-2/3 compliant · AES-256 at rest · Keys never leave HSM · Key rotation enforced</td><td>Protects encryption keys and stored PAN data</td></tr>
+      <tr><td><strong style="color:var(--white)">Access Controls</strong></td><td>RBAC and least privilege · MFA for privileged users · Access reviews and approvals required</td><td>Prevents unauthorized access; supports full audit trail</td></tr>
+      <tr><td><strong style="color:var(--white)">Segmentation & Isolation</strong></td><td>Vault and tokenization service in isolated CDE · Network segmentation via firewalls and VLANs · No direct public access</td><td>Reduces attack surface; limits lateral movement</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SLIDE 18: TOKENIZATION PCI MAPPING -->
+<div class="slide" data-module="2" data-notes="Requirement 3 is the most important one here — it's the one that says you must protect stored cardholder data. Tokenization is the most powerful way to satisfy it because you're eliminating the data entirely from most systems.">
+  <div class="slide-head">
+    <div class="s-kicker">Compliance Alignment</div>
+    <h2>Tokenization → PCI DSS Requirements</h2>
+  </div>
+  <div class="req-list">
+    <div class="req-row"><span class="rr-num">Req. 3</span><div class="rr-body"><strong>Protect stored account data</strong>PAN is never stored outside the HSM-protected vault. Tokens — which are non-sensitive — are used everywhere else. This directly reduces PCI DSS scope.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 3.5 / 3.6</span><div class="rr-body"><strong>Protect cryptographic keys</strong>Keys are generated and permanently stored inside the HSM. Key rotation is enforced. Keys never exist in software where they could be copied or extracted.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 4</span><div class="rr-body"><strong>Encrypt data in transmission</strong>TLS 1.2+ is enforced for all transmissions of PAN to the tokenization service. PAN never travels unencrypted.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 7 & 8</span><div class="rr-body"><strong>Restrict and authenticate access</strong>RBAC and least privilege enforced on the vault. MFA required for all privileged access. Access reviews are mandatory.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 10</span><div class="rr-body"><strong>Log and monitor all access</strong>Every tokenization event, vault access, and key usage event is logged and sent to SIEM for real-time alerting.</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     MODULE 3: NETWORK  (slides 19–27)
+════════════════════════════════════════════════════════ -->
+
+<!-- SLIDE 19: NETWORK SECTION HEADER -->
+<div class="slide slide-section" data-module="3" data-notes="Start Module 3. Ask the team: if an attacker breaks into our office network, what stops them from reaching the payment vault? The answer is network segmentation — and that's what this module is about.">
+  <div class="s-num">03</div>
+  <div class="s-label">Deliverable Three</div>
+  <h2>Network Security</h2>
+  <p class="s-desc">How we make sure that even if an attacker gets into our network, they cannot reach the place where cardholder data lives.</p>
+  <div class="s-tags"><span class="s-tag">Firewall Rules</span><span class="s-tag">CDE Isolation</span><span class="s-tag">Default Deny</span><span class="s-tag">Bastion Host</span><span class="s-tag">Segmentation</span></div>
+</div>
+
+<!-- SLIDE 20: NETWORK ZONES -->
+<div class="slide" data-module="3" data-notes="Walk through the zones top to bottom. Colour-coded from most dangerous (red = internet) to most protected (green = CDE). The key insight: you cannot jump zones. Every move requires passing through a firewall.">
+  <div class="slide-head">
+    <div class="s-kicker">Zone Architecture</div>
+    <h2>The Network Is Divided into Six Zones</h2>
+    <p class="s-intro">Each zone has a different trust level. Traffic between zones must pass through a firewall. You cannot skip zones — every hop is controlled and logged.</p>
+  </div>
+  <div class="zone-stack">
+    <div class="zone-row z-internet"><span class="zr-name">Internet / Public</span><span class="zr-desc">External users and clients. No direct access to any internal system.</span><span class="zr-trust">UNTRUSTED</span></div>
+    <div class="zone-row z-dmz"><span class="zr-name">DMZ — API Gateway</span><span class="zr-desc">Entry point for API traffic. WAF, rate limiting, TLS/mTLS enforced here.</span><span class="zr-trust">SEMI-TRUSTED</span></div>
+    <div class="zone-row z-app"><span class="zr-name">Application Zone</span><span class="zr-desc">Backend services. Can only reach the CDE for tokenization requests. No direct internet access.</span><span class="zr-trust">INTERNAL</span></div>
+    <div class="zone-row z-cde"><span class="zr-name">CDE — Cardholder Data Environment</span><span class="zr-desc">Tokenization service and token vault. The most restricted zone. Strict isolation enforced at all times.</span><span class="zr-trust">MOST RESTRICTED</span></div>
+    <div class="zone-row z-admin"><span class="zr-name">Admin Zone</span><span class="zr-desc">Administrative users only. All access to CDE goes through bastion host. MFA required.</span><span class="zr-trust">CONTROLLED</span></div>
+    <div class="zone-row z-siem"><span class="zr-name">Logging / SIEM Zone</span><span class="zr-desc">Receives logs from CDE and all other zones. No return traffic to CDE allowed.</span><span class="zr-trust">RECEIVE-ONLY</span></div>
+  </div>
+  <div class="analogy" style="margin-top:.875rem"><span class="bulb">💡</span><div class="analogy-body"><strong>The Hospital Analogy</strong><p>A hospital has a lobby, general wards, and an ICU. You can walk into the lobby freely. The wards need a visitor badge. The ICU needs a badge, a code, a stated reason, and a staff escort. You cannot walk from the lobby to the ICU — you pass through every checkpoint. Our network works the same way.</p></div></div>
+</div>
+
+<!-- SLIDE 21: DEFAULT DENY -->
+<div class="slide" data-module="3" data-notes="This is the most important conceptual point in the network module. Write it on the whiteboard: EVERYTHING IS BLOCKED UNLESS WE EXPLICITLY ALLOW IT. Every allowed path is a deliberate, documented, reviewed decision.">
+  <div class="slide-head">
+    <div class="s-kicker">The Core Principle</div>
+    <h2>Default Deny — The Most Important Rule</h2>
+    <p class="s-intro">The entire firewall model is built on one principle: everything is blocked unless there is an explicit rule saying otherwise.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel red" style="margin-bottom:1rem">
+        <div class="p-label">❌ Default Allow (What We Don't Do)</div>
+        <p>Traffic flows freely unless a rule blocks it. An attacker who finds a gap in the rules can reach any system. New systems added to the network are immediately accessible.</p>
+      </div>
+      <div class="panel green">
+        <div class="p-label">✓ Default Deny (Our Model)</div>
+        <p>All traffic is blocked. To open a path, you write an explicit, reviewed, documented rule. New systems are completely isolated until access is deliberately granted.</p>
+      </div>
+      <div class="analogy" style="margin-top:1rem"><span class="bulb">💡</span><div class="analogy-body"><strong>The Guest List</strong><p>Our firewall is like a nightclub with a guest list. Everyone is outside by default. You only get in if your name is on the list. We decide who's on the list — the list is FW-001 to FW-007. FW-008 and FW-010 say: if you're not on the list, you don't get in. No exceptions.</p></div></div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="p-label">The Two Foundation Rules</div>
+        <div class="req-list" style="margin:.75rem 0 0">
+          <div class="req-row"><span class="rr-num" style="color:var(--red)">FW-008</span><div class="rr-body"><strong>Any → CDE — DENY ALL</strong>The CDE is completely sealed. Only FW-003 and FW-004 (explicit allows) can breach this. Everything else is refused.</div></div>
+          <div class="req-row"><span class="rr-num" style="color:var(--red)">FW-010</span><div class="rr-body"><strong>Any → Any — DENY ALL</strong>The catch-all. Any traffic not matched by a rule above this is blocked. No gaps. No accidents. No undefined paths.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 22: FIREWALL RULES TABLE -->
+<div class="slide" data-module="3" data-notes="Walk through every rule. Spend extra time on FW-003 (the only way into the CDE for tokenization) and FW-008 (the rule that blocks everything else to the CDE). Ask: why does FW-003 need to come before FW-008?">
+  <div class="slide-head">
+    <div class="s-kicker">Deliverable 3 — Firewall Rules</div>
+    <h2>All 10 Firewall Rules — Explained</h2>
+    <p class="s-intro">These are the exact rules implemented. Every allowed path has a named rule with a documented purpose. Every other path is denied.</p>
+  </div>
+  <table class="ctable">
+    <thead><tr><th>Rule</th><th>Source</th><th>Destination</th><th>Port</th><th>Action</th><th>Why It Exists</th></tr></thead>
+    <tbody>
+      <tr><td class="c-req">FW-001</td><td>Internet</td><td>API Gateway (DMZ)</td><td>TCP 443</td><td><span class="c-allow">ALLOW</span></td><td>External clients can reach the API entry point — nothing else</td></tr>
+      <tr><td class="c-req">FW-002</td><td>API Gateway</td><td>Application Zone</td><td>TCP 443</td><td><span class="c-allow">ALLOW</span></td><td>API Gateway routes verified traffic to backend services</td></tr>
+      <tr><td class="c-req">FW-003</td><td>App Zone</td><td>CDE (Tokenization)</td><td>TCP 443 mTLS</td><td><span class="c-allow">ALLOW</span></td><td>The <em>only</em> way into the CDE for normal operations — mTLS required</td></tr>
+      <tr><td class="c-req">FW-004</td><td>Tokenization Svc</td><td>Token Vault (CDE)</td><td>TCP 443</td><td><span class="c-allow">ALLOW</span></td><td>Tokenization service stores and retrieves PAN inside the CDE</td></tr>
+      <tr><td class="c-req">FW-005</td><td>Admin Network</td><td>Bastion Host</td><td>TCP 22/3389</td><td><span class="c-restrict">RESTRICTED</span></td><td>Admin access enters through a single, monitored choke point</td></tr>
+      <tr><td class="c-req">FW-006</td><td>Bastion Host</td><td>CDE Systems</td><td>TCP 22/3389</td><td><span class="c-restrict">RESTRICTED</span></td><td>Bastion is the only path from admin to CDE — sessions are fully logged</td></tr>
+      <tr><td class="c-req">FW-007</td><td>CDE</td><td>SIEM / Logging</td><td>514/HTTPS</td><td><span class="c-allow">ALLOW</span></td><td>CDE pushes logs out for monitoring — no return traffic allowed</td></tr>
+      <tr><td class="c-req">FW-008</td><td>Any</td><td>CDE</td><td>Any</td><td><span class="c-deny">DENY</span></td><td><strong style="color:var(--white)">Default deny — the CDE is sealed except for FW-003/004/006/007</strong></td></tr>
+      <tr><td class="c-req">FW-009</td><td>App Zone</td><td>Internet</td><td>TCP 443</td><td><span class="c-restrict">RESTRICTED</span></td><td>Specific, approved outbound calls only (updates, external APIs)</td></tr>
+      <tr><td class="c-req">FW-010</td><td>Any</td><td>Any</td><td>Any</td><td><span class="c-deny">DENY</span></td><td><strong style="color:var(--white)">Catch-all default deny — all undefined traffic is blocked</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SLIDE 23: BASTION HOST -->
+<div class="slide" data-module="3" data-notes="The bastion host is about making admin access safe without eliminating it. Key question to ask your team: what would happen if an admin's laptop was compromised? Walk through why the bastion host still protects the CDE even in that scenario.">
+  <div class="slide-head">
+    <div class="s-kicker">Controlled Administration</div>
+    <h2>The Bastion Host — One Door, Always Watched</h2>
+    <p class="s-intro">Admins need to manage CDE systems. But direct access from corporate laptops would break segmentation. The bastion host is the controlled, logged, MFA-protected single entry point.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div style="margin-bottom:1rem">
+        <div class="p-label" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:.75rem">Admin Access Path</div>
+        <div class="flow" style="flex-direction:column;gap:.5rem">
+          <div style="display:flex;align-items:center;gap:.75rem"><span style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px">①</span><div class="flow-node warn" style="flex:1">Admin's laptop — corporate network</div></div>
+          <div style="display:flex;align-items:center;gap:.75rem"><span style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px">②</span><div class="flow-node hi" style="flex:1">MFA verification required</div></div>
+          <div style="display:flex;align-items:center;gap:.75rem"><span style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px">③</span><div class="flow-node hi" style="flex:1">Bastion host — FW-005 permits entry</div></div>
+          <div style="display:flex;align-items:center;gap:.75rem"><span style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px">④</span><div class="flow-node ok" style="flex:1">CDE system — FW-006 permits entry from bastion only</div></div>
+        </div>
+      </div>
+      <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>If the Laptop Is Compromised</strong><p>An attacker who steals admin credentials still must break through the bastion host separately — while every session is recorded and alerted on. Compromising one device is not enough. This is defence in depth for admin access.</p></div></div>
+    </div>
+    <div>
+      <div class="tiles" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.875rem">
+        <div class="tile"><span class="t-val">Single</span><div class="t-key">Entry Point</div><div class="t-note">One choke point — no alternative admin paths exist</div></div>
+        <div class="tile"><span class="t-val">MFA</span><div class="t-key">Required</div><div class="t-note">Password alone is not enough to enter</div></div>
+        <div class="tile"><span class="t-val">Full</span><div class="t-key">Session Logging</div><div class="t-note">Every command recorded for audit</div></div>
+        <div class="tile"><span class="t-val">Blocked</span><div class="t-key">Direct SSH/RDP</div><div class="t-note">FW-008 denies all direct CDE access</div></div>
+      </div>
+      <div class="panel">
+        <div class="p-label">What Bastion Host Logs Capture</div>
+        <ul class="clist" style="margin:.5rem 0 0">
+          <li>Who connected, from where, at what time</li>
+          <li>Which CDE systems were accessed</li>
+          <li>Every command typed during the session</li>
+          <li>Files transferred in or out</li>
+          <li>Session duration and disconnect time</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 24: NETWORK PCI MAPPING -->
+<div class="slide" data-module="3" data-notes="PCI DSS Requirement 1 is all about firewalls. Requirement 1.3 is the critical one — it specifically bans direct internet-to-CDE paths. Your firewall rules directly satisfy this. Point to FW-008 as the proof.">
+  <div class="slide-head">
+    <div class="s-kicker">Compliance Alignment</div>
+    <h2>Network Security → PCI DSS Requirements</h2>
+  </div>
+  <div class="req-list">
+    <div class="req-row"><span class="rr-num">Req. 1</span><div class="rr-body"><strong>Install and maintain network security controls</strong>All 10 firewall rules (FW-001 to FW-010) implement and enforce the network control framework.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 1.2</span><div class="rr-body"><strong>Restrict inbound and outbound traffic</strong>Default deny rules FW-008 and FW-010 block all undefined traffic. FW-009 restricts outbound to approved destinations only.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 1.3</span><div class="rr-body"><strong>Prohibit direct internet access to CDE</strong>The internet can only reach the DMZ (FW-001). The CDE is unreachable from the internet by any path — FW-008 blocks everything else.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 7</span><div class="rr-body"><strong>Restrict access by business need</strong>Admin access is restricted to the bastion host path only (FW-005, FW-006). No exceptions.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 10</span><div class="rr-body"><strong>Log and monitor all access</strong>FW-007 routes all CDE log traffic to SIEM. All access events — including blocked attempts — are captured and retained.</div></div>
+    <div class="req-row"><span class="rr-num">Req. 11</span><div class="rr-body"><strong>Test security regularly</strong>Firewall rules are reviewed quarterly. Segmentation testing confirms the CDE cannot be reached through any unauthorised path.</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     MODULE 4: VALIDATION  (slides 25–28)
+════════════════════════════════════════════════════════ -->
+
+<!-- SLIDE 25: VALIDATION HEADER -->
+<div class="slide slide-section" data-module="4" data-notes="Final module. Explain: implementing controls is not enough. We have to prove they work. This is the difference between saying 'we have mTLS' and proving it actually rejects unauthenticated requests.">
+  <div class="s-num">04</div>
+  <div class="s-label">Validation & Assurance</div>
+  <h2>Proving the Controls Work</h2>
+  <p class="s-desc">Every control we've built must be tested, evidenced, and proven effective. This is what audit readiness looks like in practice.</p>
+  <div class="s-tags"><span class="s-tag">Control Testing</span><span class="s-tag">Evidence Collection</span><span class="s-tag">Pen Testing</span><span class="s-tag">PCI Audit</span></div>
+</div>
+
+<!-- SLIDE 26: VALIDATION TABLE -->
+<div class="slide" data-module="4" data-notes="Walk through each validation test. Emphasise: we don't just check a box. We run an actual test that would catch a misconfiguration. Column 3 (Required Evidence) is what the QSA will ask for.">
+  <div class="slide-head">
+    <div class="s-kicker">How We Validate Each Control</div>
+    <h2>Validation Tests & Required Evidence</h2>
+    <p class="s-intro">Each control is validated by running a real scenario that would fail if the control is misconfigured. The evidence is what we hand to the auditor.</p>
+  </div>
+  <table class="ctable">
+    <thead><tr><th>Deliverable</th><th>Control</th><th>How We Test It</th><th>Evidence Required</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:var(--white)">API Config</strong></td><td>mTLS</td><td>Attempt API call without a client certificate — connection must be rejected</td><td>Gateway logs showing rejected unauthenticated requests</td></tr>
+      <tr><td><strong style="color:var(--white)">API Config</strong></td><td>OAuth 2.0</td><td>Test expired and out-of-scope tokens — requests must be denied with 401</td><td>Token validation logs; rejected request captures</td></tr>
+      <tr><td><strong style="color:var(--white)">API Config</strong></td><td>Rate Limiting</td><td>Submit requests exceeding threshold — HTTP 429 must be returned</td><td>API Gateway throttle logs; HTTP 429 response captures</td></tr>
+      <tr><td><strong style="color:var(--white)">Tokenization</strong></td><td>Real-time tokenization</td><td>Submit a test PAN — verify no PAN appears in any downstream log or database</td><td>Tokenization logs; downstream system scan confirming no PAN</td></tr>
+      <tr><td><strong style="color:var(--white)">Tokenization</strong></td><td>HSM vault access</td><td>Attempt vault access without credentials — access must be denied and alerted</td><td>HSM access logs; RBAC configuration evidence; key rotation records</td></tr>
+      <tr><td><strong style="color:var(--white)">Firewall Rules</strong></td><td>Default Deny</td><td>Attempt connection to CDE from an unauthorised zone — must be blocked</td><td>Firewall block logs; pen test confirming no unauthorised CDE path</td></tr>
+      <tr><td><strong style="color:var(--white)">Firewall Rules</strong></td><td>Bastion-only admin</td><td>Attempt direct SSH to CDE from admin laptop — must be blocked</td><td>FW-008 block logs; pen test confirming bastion-only path</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SLIDE 27: EVIDENCE CHECKLIST -->
+<div class="slide" data-module="4" data-notes="This is the PCI DSS audit prep checklist. Walk through it with your team. Assign owners for each item now — don't wait until audit week to discover something is missing.">
+  <div class="slide-head">
+    <div class="s-kicker">Audit Readiness</div>
+    <h2>PCI DSS Evidence Checklist</h2>
+    <p class="s-intro">These are the exact artefacts a QSA will request. Every item must be collected, current, and stored in the GRC repository before the assessment.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="p-label" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:.75rem">API Security Evidence</div>
+      <div class="req-list">
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 4, 8</span><div class="rr-body"><strong>API Gateway Configuration Export</strong>mTLS, OAuth, and rate limiting settings exported from the gateway</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 4</span><div class="rr-body"><strong>Certificate Inventory</strong>All active certs with expiry dates and rotation schedule</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 7, 8</span><div class="rr-body"><strong>OAuth Token Policy Doc</strong>Token lifetimes, scopes, validation rules documented</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 10, 11</span><div class="rr-body"><strong>SIEM Alert Configuration</strong>Screenshots of alert rules for anomalies and failed auth</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="p-label" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:.75rem">Tokenization & Network Evidence</div>
+      <div class="req-list">
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 3, 4</span><div class="rr-body"><strong>Tokenization Architecture Diagram</strong>Data flow showing PAN-to-token path and vault isolation</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 3.5, 3.6</span><div class="rr-body"><strong>HSM Configuration & Key Rotation Logs</strong>FIPS cert, key rotation records, access logs</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 1, 1.2</span><div class="rr-body"><strong>Firewall Rule Export</strong>Full export of current rules with change history</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 1.3, 11</span><div class="rr-body"><strong>Segmentation Test Results</strong>Pen test confirming CDE cannot be reached from outside</div></div>
+        <div class="req-row"><span class="rr-num" style="color:var(--gold)">Req. 11</span><div class="rr-body"><strong>Penetration Test Report</strong>Full report with findings and remediation tracking</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 28: SUMMARY / CLOSING -->
+<div class="slide" data-module="4" data-notes="Close the training. Ask if anyone has questions. Reinforce the key message: these three layers work together. A breach that breaks through the API layer still hits the tokenization layer. A breach that breaks through tokenization hits the network layer. Defence in depth means no single failure is catastrophic.">
+  <div class="slide-head">
+    <div class="s-kicker">Week 3 Complete</div>
+    <h2>What We've Built — How It All Connects</h2>
+    <p class="s-intro">Three control layers. Three deliverables. One integrated defence against payment data compromise.</p>
+  </div>
+  <div class="three-col" style="margin-bottom:1.25rem">
+    <div class="panel green">
+      <span class="p-icon">🔐</span>
+      <div class="p-label">Layer 1 — API Security</div>
+      <h3>mTLS + OAuth + Rate Limiting</h3>
+      <p>Only verified, authorised, well-behaved systems can reach our APIs. Everything else is rejected before it touches data.</p>
+    </div>
+    <div class="panel green">
+      <span class="p-icon">💳</span>
+      <div class="p-label">Layer 2 — Tokenization</div>
+      <h3>Real-time PAN → Token</h3>
+      <p>Even if an attacker gets through the API layer, they find only useless tokens everywhere — no real PANs to steal.</p>
+    </div>
+    <div class="panel green">
+      <span class="p-icon">🌐</span>
+      <div class="p-label">Layer 3 — Network</div>
+      <h3>Default Deny + CDE Isolation</h3>
+      <p>Even if an attacker reaches the network, the CDE is sealed. No path to the vault exists except the ones we deliberately opened.</p>
+    </div>
+  </div>
+  <div class="analogy"><span class="bulb">💡</span><div class="analogy-body"><strong>The Defence in Depth Payoff</strong><p>Each layer assumes the layer before it will sometimes fail. API security fails → tokenization means there's nothing useful to steal. Tokenization is breached → network segmentation means the attacker cannot reach the vault. The vault is targeted → HSM keys cannot be extracted. That's what defence in depth actually means in practice.</p></div></div>
+  <div class="stat-row" style="margin-top:1.25rem">
+    <div class="stat-box"><span class="sb-val">3</span><div class="sb-lbl">Control Layers</div></div>
+    <div class="stat-box"><span class="sb-val">3</span><div class="sb-lbl">Deliverables</div></div>
+    <div class="stat-box"><span class="sb-val">10</span><div class="sb-lbl">PCI DSS Reqs</div></div>
+    <div class="stat-box"><span class="sb-val">10</span><div class="sb-lbl">Firewall Rules</div></div>
+    <div class="stat-box"><span class="sb-val">7</span><div class="sb-lbl">Validation Tests</div></div>
+    <div class="stat-box"><span class="sb-val">9</span><div class="sb-lbl">Evidence Items</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     GLOSSARY SLIDE
+════════════════════════════════════════════════════════ -->
+<div class="slide" data-module="5" id="glossary-slide">
+  <div class="slide-head">
+    <div class="s-kicker">Reference</div>
+    <h2>Glossary — Must-Know Terms & Acronyms</h2>
+    <p class="s-intro">Every abbreviation, acronym, and technical term used across these three deliverables — searchable and filterable by category.</p>
+  </div>
+  <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+    <div style="position:relative;flex:1;min-width:200px">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px">⌕</span>
+      <input id="slide-gloss-search" type="text" placeholder="Search terms or definitions…"
+        oninput="slideGlossFilter()"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 34px;color:var(--white);font-family:var(--body);font-size:13px;outline:none"/>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="slide-gloss-filters">
+      <button class="gf-btn active" onclick="slideGlossCat('all',this)">All</button>
+      <button class="gf-btn" onclick="slideGlossCat('api',this)">API Security</button>
+      <button class="gf-btn" onclick="slideGlossCat('token',this)">Tokenization</button>
+      <button class="gf-btn" onclick="slideGlossCat('network',this)">Network</button>
+      <button class="gf-btn" onclick="slideGlossCat('pci',this)">PCI DSS</button>
+    </div>
+  </div>
+  <div id="slide-gloss-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:.75rem;overflow-y:auto;max-height:calc(100vh - 280px);padding-right:4px"></div>
+</div>
+
+</div><!-- /stage -->
+
+<!-- DOTS -->
+<div class="slide-dots-wrap" id="dots-wrap"></div>
+
+<!-- GLOSSARY TOGGLE -->
+<button class="gloss-toggle" onclick="toggleGlossary()" title="Open Glossary">📖</button>
+
+<!-- GLOSSARY PANEL -->
+<div class="gloss-panel" id="gloss-panel">
+  <div class="gloss-header">
+    <h3>Glossary of Terms</h3>
+    <button class="gloss-close" onclick="toggleGlossary()">✕</button>
+  </div>
+  <div class="gloss-search"><input type="text" placeholder="Search terms…" oninput="filterGloss(this.value)" id="gloss-input"/></div>
+  <div class="gloss-filters">
+    <button class="gf-btn active" onclick="glossCat('all',this)">All</button>
+    <button class="gf-btn" onclick="glossCat('api',this)">API</button>
+    <button class="gf-btn" onclick="glossCat('token',this)">Tokenization</button>
+    <button class="gf-btn" onclick="glossCat('network',this)">Network</button>
+    <button class="gf-btn" onclick="glossCat('pci',this)">PCI DSS</button>
+  </div>
+  <div class="gloss-body" id="gloss-body"></div>
+</div>
+
+<script>
+// ── GLOSSARY DATA ─────────────────────────────────────────────────────────────
+const TERMS = [
+  {t:"mTLS",c:"api",d:"Mutual TLS — both the client and server present digital certificates before any data is exchanged. Prevents impersonation and man-in-the-middle attacks."},
+  {t:"TLS 1.3",c:"api",d:"The latest version of Transport Layer Security. Encrypts data in transit. TLS 1.2 is the PCI DSS minimum; 1.3 is preferred for its speed and stronger security."},
+  {t:"OAuth 2.0",c:"api",d:"An authorization framework using short-lived tokens. Controls what an authenticated system is allowed to do — not just who it is."},
+  {t:"JWT",c:"api",d:"JSON Web Token. A signed, self-contained token used in OAuth 2.0. Contains issuer, audience, expiry, and scope claims — all validated on every request."},
+  {t:"Rate Limiting",c:"api",d:"Caps the number of API requests a client can make per time window. Returns HTTP 429 when exceeded. Prevents DDoS and card enumeration attacks."},
+  {t:"HTTP 429",c:"api",d:"'Too Many Requests' — the standard HTTP response when a client exceeds a rate limit. Instructs the client to back off and retry after a delay."},
+  {t:"Anomaly Detection",c:"api",d:"Establishes a baseline of normal API traffic and alerts when behaviour deviates significantly — spikes, unusual locations, sequential queries, bot patterns."},
+  {t:"SIEM",c:"api",d:"Security Information and Event Management. Aggregates logs from all systems, correlates events, and fires real-time alerts. Splunk is a common example."},
+  {t:"API Gateway",c:"api",d:"The entry point for all API traffic. Sits in the DMZ and enforces mTLS, rate limiting, WAF rules. The first and most visible line of defence."},
+  {t:"WAF",c:"api",d:"Web Application Firewall. Inspects HTTP/HTTPS traffic for known attack patterns (SQL injection, XSS). Works alongside the API Gateway."},
+  {t:"Least Privilege",c:"api",d:"Every system or user gets only the minimum access needed for their job. OAuth scopes enforce this at the API level; RBAC enforces it everywhere else."},
+  {t:"CRL",c:"api",d:"Certificate Revocation List. A list of certificates that have been revoked. Servers check this to ensure they're not accepting a compromised certificate."},
+  {t:"OCSP",c:"api",d:"Online Certificate Status Protocol. A faster, real-time alternative to CRL for checking whether a specific certificate is currently valid."},
+  {t:"PAN",c:"token",d:"Primary Account Number. The 16-digit card number. The most sensitive data element in a payment system — its compromise enables direct fraud."},
+  {t:"Tokenization",c:"token",d:"Replacing sensitive data (PAN) with a random, non-sensitive token at the point of capture. The token has no value to an attacker."},
+  {t:"Token",c:"token",d:"A randomly generated, non-sensitive substitute for a PAN. Irreversible — cannot be converted back to PAN without access to the vault."},
+  {t:"Token Vault",c:"token",d:"A secure database storing PAN-to-token mappings. Located inside the CDE, encrypted with AES-256, protected by HSM and strict access controls."},
+  {t:"HSM",c:"token",d:"Hardware Security Module. A dedicated physical device that generates, stores, and uses encryption keys. Keys are physically trapped inside and never exported."},
+  {t:"FIPS 140-2/3",c:"token",d:"US federal standard for cryptographic hardware. FIPS certification confirms an HSM meets government-grade security requirements."},
+  {t:"AES-256",c:"token",d:"Advanced Encryption Standard with a 256-bit key. The gold standard for encrypting data at rest. Used to encrypt PANs inside the token vault."},
+  {t:"Non-deterministic",c:"token",d:"Token generation using true randomness. The same PAN tokenized twice produces two unrelated tokens. No formula links them — reverse engineering is impossible."},
+  {t:"FPE",c:"token",d:"Format-Preserving Encryption. Produces a token in the same format as the PAN (16 digits). Used only for legacy system compatibility — standard non-deterministic tokens preferred."},
+  {t:"CDE",c:"token",d:"Cardholder Data Environment. All systems, networks, and people that store, process, or transmit cardholder data. Tokenization reduces the CDE scope significantly."},
+  {t:"RBAC",c:"token",d:"Role-Based Access Control. Permissions assigned by job role rather than to individuals. Only approved roles can access the token vault or HSM."},
+  {t:"Key Rotation",c:"token",d:"Replacing encryption keys on a schedule. Limits the damage if a key is ever exposed. Required by PCI DSS Requirement 3.6."},
+  {t:"Firewall",c:"network",d:"A network security device that monitors and controls traffic based on predefined rules. Enforces zone boundaries and blocks unauthorised communication."},
+  {t:"Default Deny",c:"network",d:"A firewall model where all traffic is blocked unless explicitly permitted. Every allowed path is a deliberate, reviewed, documented decision."},
+  {t:"DMZ",c:"network",d:"Demilitarised Zone. A semi-trusted network segment between the internet and internal systems. Hosts the API Gateway and WAF."},
+  {t:"Network Segmentation",c:"network",d:"Dividing a network into isolated zones. Limits lateral movement — an attacker in one zone cannot freely move to others."},
+  {t:"Bastion Host",c:"network",d:"A hardened server that is the only allowed entry point for administrative access to the CDE. All sessions are MFA-protected and fully logged."},
+  {t:"Jump Server",c:"network",d:"Another name for a bastion host. Administrators 'jump' through it to reach internal systems — no direct path from their workstation to the CDE exists."},
+  {t:"Lateral Movement",c:"network",d:"An attacker's technique of moving through a network after initial access. Network segmentation and default deny rules contain this to the breached zone."},
+  {t:"VLAN",c:"network",d:"Virtual Local Area Network. Software-defined network segment that isolates traffic even on shared physical infrastructure."},
+  {t:"Pen Testing",c:"network",d:"Penetration testing. Authorised simulated attack against systems to find vulnerabilities before real attackers do. Mandatory annually under PCI DSS Req. 11."},
+  {t:"Segmentation Testing",c:"network",d:"A specific pen test verifying CDE isolation — confirming that no unauthorised zone can reach the CDE through any path."},
+  {t:"PCI DSS",c:"pci",d:"Payment Card Industry Data Security Standard. 12 requirements for organisations that handle cardholder data. Maintained by the PCI Security Standards Council."},
+  {t:"Requirement 1",c:"pci",d:"Install and maintain network security controls — firewalls and rules that restrict traffic and protect the CDE."},
+  {t:"Requirement 3",c:"pci",d:"Protect stored account data — PANs must not be stored unnecessarily and must be rendered unreadable (tokenized or encrypted) if stored."},
+  {t:"Requirement 4",c:"pci",d:"Protect cardholder data during transmission — strong cryptography (TLS 1.2+) required for all PAN sent over open networks."},
+  {t:"Requirement 7",c:"pci",d:"Restrict access to system components by business need — least privilege applied to every user, role, and system."},
+  {t:"Requirement 8",c:"pci",d:"Identify and authenticate access — MFA for all CDE access, unique IDs, strong password policies."},
+  {t:"Requirement 10",c:"pci",d:"Log and monitor all access — every access, change, and failure logged; SIEM integration; 12-month retention."},
+  {t:"Requirement 11",c:"pci",d:"Test security of systems regularly — vulnerability scans, penetration testing, segmentation testing, and intrusion detection."},
+  {t:"QSA",c:"pci",d:"Qualified Security Assessor. A PCI DSS-certified auditor who assesses compliance and issues a Report on Compliance (ROC)."},
+  {t:"ROC",c:"pci",d:"Report on Compliance. The formal document a QSA produces after a full PCI DSS assessment."},
+  {t:"Scope",c:"pci",d:"Systems, people, and processes that store, process, or transmit cardholder data. Tokenization dramatically reduces scope by removing PAN from most systems."},
+  {t:"SAQ",c:"pci",d:"Self-Assessment Questionnaire. A validation tool smaller merchants use to document their own PCI DSS compliance instead of a full QSA assessment."},
+  {t:"AOC",c:"pci",d:"Attestation of Compliance. A form signed by a QSA or merchant confirming that the PCI DSS assessment was completed and the entity is compliant."},
+  {t:"CHD",c:"pci",d:"Cardholder Data. Includes the PAN plus any of: cardholder name, expiration date, service code. All CHD must be protected under PCI DSS Requirement 3."},
+  {t:"SAD",c:"pci",d:"Sensitive Authentication Data. Includes full magnetic stripe, CVV/CVC codes, and PINs. SAD must NEVER be stored after authorisation — even encrypted."},
+  {t:"CVV / CVC",c:"pci",d:"Card Verification Value / Card Verification Code. The 3–4 digit security code on a card. Classified as Sensitive Authentication Data — must never be stored post-authorisation."},
+  {t:"P2PE",c:"pci",d:"Point-to-Point Encryption. Encrypts cardholder data at the point of interaction (e.g. card terminal) until it reaches a secure decryption environment. Reduces PCI scope significantly."},
+  {t:"MFA",c:"pci",d:"Multi-Factor Authentication. Requires two or more verification methods (something you know, have, or are). Mandatory for all CDE access under PCI DSS Requirement 8."},
+  {t:"IDS / IPS",c:"network",d:"Intrusion Detection System / Intrusion Prevention System. IDS monitors and alerts on suspicious traffic; IPS actively blocks it. Required by PCI DSS Req. 11 for the CDE."},
+  {t:"TCP 443",c:"network",d:"The standard port for HTTPS traffic. All API communication in our environment uses TCP 443 with TLS encryption. No unencrypted HTTP (port 80) is permitted."},
+  {t:"SSH",c:"network",d:"Secure Shell. An encrypted protocol for remote command-line access to servers. Used by administrators to manage CDE systems — only permitted via the bastion host (FW-005/006)."},
+  {t:"RDP",c:"network",d:"Remote Desktop Protocol. Enables graphical remote access to Windows systems. Like SSH, only permitted to CDE via the bastion host. Blocked by FW-008 on all direct paths."},
+  {t:"NAC",c:"network",d:"Network Access Control. Enforces security policy before allowing a device to connect to the network. Ensures only compliant, authorised devices can join internal segments."},
+  {t:"HTTPS",c:"api",d:"HTTP Secure. Standard web protocol combining HTTP with TLS encryption. All external-facing API endpoints must use HTTPS — plain HTTP is never permitted for cardholder data."},
+  {t:"DDoS",c:"api",d:"Distributed Denial of Service. An attack that floods a service with traffic to make it unavailable. Rate limiting at the API Gateway is our primary defence against DDoS."},
+  {t:"MITM",c:"api",d:"Man-in-the-Middle. An attack where an adversary secretly intercepts communication between two parties. mTLS prevents MITM by requiring both sides to present verified certificates."},
+  {t:"TLS",c:"api",d:"Transport Layer Security. The cryptographic protocol that encrypts data between two parties over a network. Replaced SSL (which is deprecated). Minimum version 1.2 required by PCI DSS."},
+  {t:"SSL",c:"api",d:"Secure Sockets Layer. The predecessor to TLS — now deprecated and insecure. PCI DSS explicitly prohibits SSL. All references to 'SSL' in modern environments mean TLS."},
+  {t:"API",c:"api",d:"Application Programming Interface. A set of rules that allows two software systems to communicate. APIs are the primary attack surface we secure with mTLS, OAuth, and rate limiting."},
+  {t:"GRC",c:"pci",d:"Governance, Risk & Compliance. The framework (and often the team or tool) used to document controls, manage risk, and store audit evidence for PCI DSS assessments."},
+  {t:"POA&M",c:"pci",d:"Plan of Action & Milestones. A document that tracks identified vulnerabilities or gaps alongside remediation steps and target completion dates. Used to manage pen test findings."},
+  {t:"FIPS",c:"token",d:"Federal Information Processing Standard. US government standards for IT systems. FIPS 140-2 and 140-3 are the relevant standards for cryptographic modules like HSMs."},
+  {t:"ENC",c:"token",d:"Encryption. The process of converting readable data (plaintext) into an unreadable format (ciphertext) using a key. AES-256 is used for PAN at rest; TLS for data in transit."},
+];
+
+// ── SLIDE ENGINE ──────────────────────────────────────────────────────────────
+const slides = Array.from(document.querySelectorAll('.slide'));
+let cur = 0;
+
+// Module start indices
+const MODULE_STARTS = [0, 4, 12, 19, 25, 29];
+const MODULE_COUNT = 6;
+
+function buildDots() {
+  const wrap = document.getElementById('dots-wrap');
+  wrap.innerHTML = '';
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 's-dot';
+    d.title = `Slide ${i+1}`;
+    d.onclick = () => goTo(i);
+    wrap.appendChild(d);
+  });
+  document.getElementById('tot-slides').textContent = slides.length;
+}
+
+function goTo(n) {
+  slides[cur].classList.remove('active');
+  cur = Math.max(0, Math.min(n, slides.length - 1));
+  slides[cur].classList.add('active');
+  updateUI();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function nextSlide() { if (cur < slides.length-1) goTo(cur+1); }
+function prevSlide() { if (cur > 0) goTo(cur-1); }
+
+function updateUI() {
+  document.getElementById('cur-slide').textContent = cur+1;
+  document.getElementById('prog-fill').style.width = ((cur/(slides.length-1))*100)+'%';
+
+  const dots = document.querySelectorAll('.s-dot');
+  dots.forEach((d,i) => {
+    d.className = 's-dot' + (i===cur?' active':i<cur?' done':'');
+  });
+
+  document.getElementById('btn-prev').disabled = cur===0;
+  document.getElementById('btn-next').disabled = cur===slides.length-1;
+
+  // Update module pills
+  const modIndex = parseInt(slides[cur].dataset.module)||0;
+  for(let m=0;m<MODULE_COUNT;m++){
+    const pill = document.getElementById(`pill-${m}`);
+    if(!pill) continue;
+    pill.classList.toggle('active', m===modIndex);
+  }
+}
+
+function jumpModule(m) {
+  goTo(MODULE_STARTS[m]);
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if(document.getElementById('gloss-panel').classList.contains('open')) return;
+  if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); nextSlide(); }
+  if(e.key==='ArrowLeft') { e.preventDefault(); prevSlide(); }
+});
+
+// ── GLOSSARY ──────────────────────────────────────────────────────────────────
+let gCat = 'all', gSearch = '';
+
+function buildGlossary() {
+  const body = document.getElementById('gloss-body');
+  body.innerHTML = '';
+  TERMS.forEach((t,i) => {
+    const el = document.createElement('div');
+    el.className = 'g-item';
+    el.id = `gi-${i}`;
+    el.innerHTML = `<div class="gi-term">${t.t}</div><span class="gi-cat">${{api:'API Security',token:'Tokenization',network:'Network',pci:'PCI DSS'}[t.c]}</span><div class="gi-def">${t.d}</div>`;
+    body.appendChild(el);
+  });
+}
+
+function filterGloss(v) { gSearch = v.toLowerCase(); applyGloss(); }
+function glossCat(c, btn) {
+  gCat = c;
+  document.querySelectorAll('.gf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyGloss();
+}
+function applyGloss() {
+  TERMS.forEach((t,i) => {
+    const el = document.getElementById(`gi-${i}`);
+    const mc = gCat==='all'||t.c===gCat;
+    const ms = !gSearch||t.t.toLowerCase().includes(gSearch)||t.d.toLowerCase().includes(gSearch);
+    el.classList.toggle('hidden', !(mc&&ms));
+  });
+}
+
+function toggleGlossary() {
+  const p = document.getElementById('gloss-panel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')) document.getElementById('gloss-input').focus();
+}
+
+// ── SLIDE GLOSSARY ────────────────────────────────────────────────────────────
+let sgCat = 'all', sgSearch = '';
+const CAT_LABELS = {api:'API Security',token:'Tokenization',network:'Network',pci:'PCI DSS'};
+const CAT_COLORS = {api:'rgba(6,182,212,.15)',token:'rgba(16,185,129,.12)',network:'rgba(249,115,22,.12)',pci:'rgba(59,130,246,.15)'};
+const CAT_TEXT   = {api:'#67E8F9',token:'#6EE7B7',network:'#FDBA74',pci:'#93C5FD'};
+
+function buildSlideGlossary() {
+  const grid = document.getElementById('slide-gloss-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  // Sort alphabetically
+  const sorted = [...TERMS].sort((a,b) => a.t.localeCompare(b.t));
+  sorted.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.id = `sg-${i}`;
+    card.style.cssText = `background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;transition:border-color .2s`;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+        <span style="font-family:var(--mono);font-size:13px;font-weight:500;color:var(--cyan)">${item.t}</span>
+        <span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:${CAT_COLORS[item.c]};color:${CAT_TEXT[item.c]};white-space:nowrap">${CAT_LABELS[item.c]}</span>
+      </div>
+      <div style="font-size:12.5px;color:#8DAFC8;line-height:1.65">${item.d}</div>`;
+    card.dataset.cat = item.c;
+    card.dataset.term = item.t.toLowerCase();
+    card.dataset.def = item.d.toLowerCase();
+    grid.appendChild(card);
+  });
+}
+
+function slideGlossFilter() {
+  sgSearch = document.getElementById('slide-gloss-search').value.toLowerCase();
+  applySlideGloss();
+}
+
+function slideGlossCat(cat, btn) {
+  sgCat = cat;
+  document.querySelectorAll('#slide-gloss-filters .gf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applySlideGloss();
+}
+
+function applySlideGloss() {
+  const grid = document.getElementById('slide-gloss-grid');
+  if (!grid) return;
+  Array.from(grid.children).forEach(card => {
+    const mc = sgCat === 'all' || card.dataset.cat === sgCat;
+    const ms = !sgSearch || card.dataset.term.includes(sgSearch) || card.dataset.def.includes(sgSearch);
+    card.style.display = (mc && ms) ? '' : 'none';
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildDots();
+buildGlossary();
+buildSlideGlossary();
+updateUI();
+</script>
+</body>
+</html>
