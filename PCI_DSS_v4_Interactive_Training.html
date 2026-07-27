@@ -1,0 +1,2525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCI DSS v4.0 — Control Room Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0E14;
+  --panel:#12161F;
+  --panel-2:#171C28;
+  --panel-3:#1D2330;
+  --border:#262C3A;
+  --border-soft:#1C212D;
+  --text:#E7E9EE;
+  --text-dim:#8890A0;
+  --text-faint:#5C6474;
+  --amber:#F0A83A;
+  --red:#E1483F;
+  --teal:#3FC7B0;
+  --blue:#5B8DEF;
+  --amber-dim:#3A2E18;
+  --red-dim:#3A1E1C;
+  --teal-dim:#123330;
+  --radius:10px;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'IBM Plex Sans',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background-image:
+    radial-gradient(circle at 15% 8%, rgba(63,199,176,0.06), transparent 40%),
+    radial-gradient(circle at 85% 92%, rgba(225,72,63,0.05), transparent 45%);
+  pointer-events:none;
+  z-index:0;
+}
+a{color:var(--teal);}
+::selection{background:rgba(63,199,176,0.3);}
+
+/* ---- layout ---- */
+.shell{display:flex;min-height:100vh;position:relative;z-index:1;}
+.sidebar{
+  width:260px;flex-shrink:0;
+  border-right:1px solid var(--border-soft);
+  background:linear-gradient(180deg,#0D1119,#0A0E14);
+  position:sticky;top:0;height:100vh;
+  padding:28px 20px;
+  overflow-y:auto;
+}
+.sidebar-brand{
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:0.12em;
+  color:var(--text-faint);
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+.sidebar-title{
+  font-family:var(--font-display);
+  font-size:19px;font-weight:700;
+  color:var(--text);
+  margin-bottom:24px;
+  line-height:1.25;
+}
+.sidebar-title span{color:var(--teal);}
+.navlist{list-style:none;padding:0;margin:0;}
+.navlist li{margin-bottom:2px;}
+.navlist a{
+  display:flex;align-items:center;gap:10px;
+  text-decoration:none;
+  color:var(--text-dim);
+  font-size:13.5px;font-weight:500;
+  padding:8px 10px;border-radius:7px;
+  transition:background .15s,color .15s;
+  border-left:2px solid transparent;
+}
+.navlist a:hover{background:var(--panel-2);color:var(--text);}
+.navlist a.active{color:var(--teal);background:var(--teal-dim);border-left-color:var(--teal);}
+.navlist .navnum{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);width:18px;}
+.sidebar-progress{
+  margin-top:28px;padding-top:20px;border-top:1px solid var(--border-soft);
+}
+.sidebar-progress-label{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.progress-track{height:6px;background:var(--panel-3);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));width:0%;transition:width .3s;}
+.progress-pct{font-family:var(--font-mono);font-size:12px;color:var(--teal);margin-top:6px;}
+
+main{flex:1;min-width:0;}
+.section{
+  padding:64px 56px;
+  border-bottom:1px solid var(--border-soft);
+  max-width:1180px;
+}
+.section:last-of-type{border-bottom:none;}
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--amber);
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--amber);}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:700;color:var(--text);margin:0 0 14px;}
+h2{font-size:32px;letter-spacing:-0.01em;}
+h3{font-size:20px;}
+p{color:var(--text-dim);margin:0 0 16px;font-size:15.5px;}
+.lead{font-size:17px;color:var(--text);max-width:760px;}
+.mono{font-family:var(--font-mono);}
+
+/* ---- hero ---- */
+.hero{padding:72px 56px 56px;position:relative;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11.5px;color:var(--teal);
+  border:1px solid var(--teal-dim);background:rgba(63,199,176,.06);
+  padding:6px 12px;border-radius:20px;margin-bottom:22px;letter-spacing:.05em;
+}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);}
+.hero h1{font-size:46px;line-height:1.08;max-width:820px;letter-spacing:-0.02em;}
+.hero h1 .hl{background:linear-gradient(90deg,var(--teal),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-sub{font-size:17px;color:var(--text-dim);max-width:640px;margin:18px 0 36px;}
+.readout-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;
+  max-width:920px;
+}
+.readout-cell{background:var(--panel);padding:22px 20px;}
+.readout-num{font-family:var(--font-mono);font-size:30px;font-weight:600;color:var(--text);line-height:1;}
+.readout-num.red{color:var(--red);}
+.readout-num.teal{color:var(--teal);}
+.readout-num.amber{color:var(--amber);}
+.readout-label{font-size:12px;color:var(--text-faint);margin-top:8px;letter-spacing:.02em;}
+
+/* ---- cards / grids ---- */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:28px 0;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:28px 0;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px;}
+.card h4{font-size:15px;margin-bottom:8px;color:var(--text);}
+.card p{font-size:14px;margin-bottom:0;}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0;}
+.pill{
+  font-family:var(--font-mono);font-size:12px;color:var(--text-dim);
+  border:1px solid var(--border);padding:5px 11px;border-radius:20px;background:var(--panel);
+}
+
+/* ---- goals interactive ---- */
+.goals-wrap{margin-top:32px;}
+.goal-row{
+  border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;background:var(--panel);
+}
+.goal-head{
+  display:flex;align-items:center;gap:16px;padding:18px 20px;cursor:pointer;user-select:none;
+  transition:background .15s;
+}
+.goal-head:hover{background:var(--panel-2);}
+.goal-num{
+  font-family:var(--font-mono);font-size:13px;color:var(--bg);
+  background:var(--teal);width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;
+}
+.goal-title{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--text);flex:1;}
+.goal-reqcount{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+.goal-chevron{color:var(--text-faint);transition:transform .2s;font-size:12px;}
+.goal-row.open .goal-chevron{transform:rotate(90deg);}
+.goal-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.goal-row.open .goal-body{max-height:600px;}
+.goal-body-inner{padding:0 20px 20px 66px;}
+.goal-body-inner p{font-size:14px;margin-bottom:14px;}
+.req-chip-list{display:flex;flex-direction:column;gap:8px;}
+.req-chip{
+  display:flex;align-items:center;gap:12px;font-size:13.5px;color:var(--text-dim);
+  padding:9px 12px;background:var(--panel-2);border-radius:7px;border:1px solid var(--border-soft);
+}
+.req-chip .rn{font-family:var(--font-mono);color:var(--teal);font-weight:600;min-width:20px;}
+
+/* ---- risk calculator ---- */
+.risk-calc{
+  display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:28px;
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:28px;
+}
+.calc-controls label{font-size:13px;color:var(--text-dim);display:block;margin-bottom:8px;font-family:var(--font-mono);letter-spacing:.03em;}
+.seg{display:flex;gap:8px;margin-bottom:22px;}
+.seg button{
+  flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);
+  font-family:var(--font-mono);font-size:12.5px;padding:10px 8px;border-radius:7px;cursor:pointer;transition:all .15s;
+}
+.seg button.active{background:var(--teal-dim);border-color:var(--teal);color:var(--teal);}
+.calc-result{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.calc-result-num{font-family:var(--font-mono);font-size:56px;font-weight:700;line-height:1;color:var(--text);}
+.calc-result-label{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);margin-top:10px;letter-spacing:.08em;text-transform:uppercase;}
+.calc-result-rating{margin-top:16px;padding:6px 16px;border-radius:20px;font-family:var(--font-mono);font-size:13px;font-weight:600;}
+.heatgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:18px;}
+.heatcell{aspect-ratio:1.6;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:var(--text-faint);border:1px solid var(--border-soft);}
+
+/* ---- control explorer ---- */
+.filter-bar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:28px 0 22px;
+  position:sticky;top:0;background:rgba(10,14,20,.92);backdrop-filter:blur(6px);
+  padding:14px 0;z-index:5;border-bottom:1px solid var(--border-soft);
+}
+.filter-group{display:flex;gap:6px;flex-wrap:wrap;}
+.fbtn{
+  font-family:var(--font-mono);font-size:12px;background:var(--panel);border:1px solid var(--border);
+  color:var(--text-dim);padding:7px 13px;border-radius:20px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.fbtn:hover{border-color:var(--text-faint);}
+.fbtn.active{background:var(--teal-dim);border-color:var(--teal);color:var(--teal);}
+.searchbox{
+  margin-left:auto;background:var(--panel);border:1px solid var(--border);border-radius:20px;
+  padding:7px 14px;font-family:var(--font-body);font-size:13px;color:var(--text);min-width:220px;
+}
+.searchbox:focus{outline:none;border-color:var(--teal);}
+.control-count{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);margin-bottom:16px;}
+.control-list{display:flex;flex-direction:column;gap:10px;}
+.ctrl-card{
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);overflow:hidden;
+}
+.ctrl-head{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;}
+.ctrl-head:hover{background:var(--panel-2);}
+.ctrl-id{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);min-width:38px;}
+.ctrl-area{font-weight:600;font-size:14.5px;color:var(--text);flex:1;min-width:200px;}
+.status-badge{
+  font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:14px;white-space:nowrap;font-weight:600;letter-spacing:.02em;
+}
+.status-badge.in-place{background:var(--teal-dim);color:var(--teal);}
+.status-badge.not-in-place{background:var(--red-dim);color:var(--red);}
+.risk-badge{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:14px;white-space:nowrap;font-weight:600;}
+.risk-badge.low{background:#1B2A1E;color:#6FCF7A;}
+.risk-badge.medium{background:var(--amber-dim);color:var(--amber);}
+.risk-badge.high{background:var(--red-dim);color:var(--red);}
+.ctrl-chevron{color:var(--text-faint);font-size:12px;transition:transform .2s;}
+.ctrl-card.open .ctrl-chevron{transform:rotate(90deg);}
+.ctrl-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.ctrl-card.open .ctrl-body{max-height:700px;}
+.ctrl-body-inner{padding:0 18px 20px 18px;border-top:1px solid var(--border-soft);margin-top:0;padding-top:16px;}
+.ctrl-q{font-size:14px;color:var(--text);font-style:italic;margin-bottom:16px;padding:12px 14px;background:var(--panel-2);border-left:2px solid var(--blue);border-radius:0 6px 6px 0;}
+.ctrl-explain{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.ctrl-explain .blk{padding:14px 16px;border-radius:8px;}
+.ctrl-explain .blk.why{background:rgba(91,141,239,.06);border:1px solid rgba(91,141,239,.18);}
+.ctrl-explain .blk.risk{background:rgba(225,72,63,.06);border:1px solid rgba(225,72,63,.18);}
+.ctrl-explain .blk-label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+.blk.why .blk-label{color:var(--blue);}
+.blk.risk .blk-label{color:var(--red);}
+.ctrl-explain .blk p{font-size:13.5px;color:var(--text-dim);margin:0;}
+.ctrl-meta{display:flex;gap:18px;margin-top:14px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);flex-wrap:wrap;}
+
+/* ---- dashboard ---- */
+.bars{margin-top:24px;}
+.bar-row{display:grid;grid-template-columns:210px 1fr 60px;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+.bar-row:last-child{border-bottom:none;}
+.bar-label{font-size:13px;color:var(--text-dim);font-family:var(--font-mono);}
+.bar-track{height:10px;background:var(--panel-3);border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:5px;}
+.bar-val{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);text-align:right;}
+.donut-wrap{display:flex;align-items:center;gap:32px;margin-top:24px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-dim);margin-bottom:8px;}
+.legend-dot{width:10px;height:10px;border-radius:3px;}
+
+/* ---- quiz ---- */
+.quiz-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;}
+.quiz-q{font-weight:600;font-size:15px;color:var(--text);margin-bottom:16px;}
+.quiz-opts{display:flex;flex-direction:column;gap:9px;}
+.quiz-opt{
+  text-align:left;background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);
+  padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-family:var(--font-body);transition:all .15s;
+}
+.quiz-opt:hover{border-color:var(--text-faint);}
+.quiz-opt.correct{background:var(--teal-dim);border-color:var(--teal);color:var(--teal);}
+.quiz-opt.wrong{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+.quiz-fb{margin-top:14px;font-size:13.5px;color:var(--text-dim);padding:12px 14px;background:var(--panel-2);border-radius:8px;display:none;}
+.quiz-score-bar{position:sticky;top:0;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;}
+
+/* ---- glossary ---- */
+.gloss-search{
+  width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);border-radius:9px;
+  padding:12px 16px;color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:24px;
+}
+.gloss-search:focus{outline:none;border-color:var(--teal);}
+.gloss-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.gloss-item{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:16px 18px;}
+.gloss-term{font-family:var(--font-mono);font-weight:600;color:var(--teal);font-size:14px;}
+.gloss-full{font-size:12px;color:var(--text-faint);margin:2px 0 8px;}
+.gloss-def{font-size:13.5px;color:var(--text-dim);margin:0;}
+
+footer{padding:36px 56px;color:var(--text-faint);font-size:12.5px;font-family:var(--font-mono);}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  .section,.hero{padding:36px 20px;}
+  .grid-2,.grid-3,.risk-calc,.ctrl-explain,.gloss-grid{grid-template-columns:1fr;}
+  .readout-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav class="sidebar">
+  <div class="sidebar-brand">PCI DSS v4.0</div>
+  <div class="sidebar-title">Control Room <span>Training</span></div>
+  <ul class="navlist" id="navlist">
+    <li><a href="#hero" class="navlink"><span class="navnum">00</span>Briefing</a></li>
+    <li><a href="#basics" class="navlink"><span class="navnum">01</span>What is PCI DSS</a></li>
+    <li><a href="#goals" class="navlink"><span class="navnum">02</span>6 Goals / 12 Requirements</a></li>
+    <li><a href="#riskscoring" class="navlink"><span class="navnum">03</span>Risk Scoring</a></li>
+    <li><a href="#explorer" class="navlink"><span class="navnum">04</span>Control Explorer</a></li>
+    <li><a href="#dashboard" class="navlink"><span class="navnum">05</span>Assessment Findings</a></li>
+    <li><a href="#quiz" class="navlink"><span class="navnum">06</span>Knowledge Check</a></li>
+    <li><a href="#glossary" class="navlink"><span class="navnum">07</span>Glossary</a></li>
+  </ul>
+  <div class="sidebar-progress">
+    <div class="sidebar-progress-label">Training Progress</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0% viewed</div>
+  </div>
+</nav>
+<main>
+
+<section class="hero" id="hero">
+  <div class="hero-badge"><span class="dot"></span>LIVE ASSESSMENT · SAQ · 68 CONTROLS EVALUATED</div>
+  <h1>Understand every control behind your <span class="hl">PCI DSS v4.0</span> assessment.</h1>
+  <p class="hero-sub">This is an interactive walkthrough of the PCI DSS v4.0 Risk Assessment &amp; Compliance Questionnaire you completed — what each control does, why it exists, and what happens when it's missing. No security background required.</p>
+  <div class="readout-grid">
+    <div class="readout-cell"><div class="readout-num">68</div><div class="readout-label">Controls assessed</div></div>
+    <div class="readout-cell"><div class="readout-num teal">22</div><div class="readout-label">In place (32%)</div></div>
+    <div class="readout-cell"><div class="readout-num red">46</div><div class="readout-label">Not in place</div></div>
+    <div class="readout-cell"><div class="readout-num amber">13</div><div class="readout-label">High / critical risk gaps</div></div>
+  </div>
+</section>
+
+<section class="section" id="basics">
+  <div class="eyebrow">01 — Foundations</div>
+  <h2>What PCI DSS actually is</h2>
+  <p class="lead">The Payment Card Industry Data Security Standard (PCI DSS) is a set of technical and operational security requirements created by the major card brands (Visa, Mastercard, Amex, Discover, JCB) through the PCI Security Standards Council. If your organisation stores, processes, or transmits card data — in any amount — PCI DSS applies to you.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Who has to comply?</h4>
+      <p>Any merchant or service provider that touches cardholder data (CHD) or sensitive authentication data (SAD) — from a single-location retailer to a global e-commerce platform. The depth of validation required (a Self-Assessment Questionnaire vs. a full Report on Compliance by a QSA) scales with transaction volume and risk.</p>
+    </div>
+    <div class="card">
+      <h4>Why it exists</h4>
+      <p>Card data is a direct, liquid target for criminals — a stolen number can be monetised in minutes. PCI DSS exists because card brands need every party that touches that data to hold the line at a common standard, or the entire payment ecosystem's trust breaks down.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:36px;">The four compliance statuses used in your assessment</h3>
+  <div class="grid-3">
+    <div class="card"><h4 style="color:var(--teal);">In Place</h4><p>The control is fully implemented, documented, and operating as intended. Evidence has been reviewed to confirm it.</p></div>
+    <div class="card"><h4 style="color:var(--blue);">In Place with CCW</h4><p>The literal requirement isn't met, but a documented Compensating Control Worksheet shows an alternative control addresses the same risk.</p></div>
+    <div class="card"><h4 style="color:var(--red);">Not in Place</h4><p>The control has not been implemented. This is a compliance gap and a real security exposure that needs remediation.</p></div>
+    <div class="card"><h4 style="color:var(--text-dim);">Not Applicable</h4><p>The requirement genuinely doesn't apply to this environment (e.g., no wireless in scope) — but this must be justified, not assumed.</p></div>
+  </div>
+
+  <h3 style="margin-top:36px;">Two kinds of sensitive data</h3>
+  <div class="grid-2">
+    <div class="card"><h4>Cardholder Data (CHD)</h4><p>The primary account number (PAN), and when stored alongside it: cardholder name, expiry date, service code. CHD may be stored, but only if protected — masked, encrypted, and minimised.</p></div>
+    <div class="card"><h4>Sensitive Authentication Data (SAD)</h4><p>Full magnetic-stripe/chip data, the CVV/CVC security code, and PINs. SAD must never be stored after a transaction is authorised — not even in encrypted form.</p></div>
+  </div>
+</section>
+
+<section class="section" id="goals">
+  <div class="eyebrow">02 — Structure</div>
+  <h2>6 goals, 12 requirements</h2>
+  <p class="lead">Every one of the 68 controls in your assessment maps to one of 12 numbered requirements, which in turn roll up into 6 broad goals. Click a goal to see which requirements sit underneath it.</p>
+  <div class="goals-wrap">
+    <div class="goal-row" data-goal="1">
+      <div class="goal-head" onclick="toggleGoal(this)">
+        <div class="goal-num">1</div>
+        <div class="goal-title">Build and Maintain a Secure Network and Systems</div>
+        <div class="goal-reqcount">Req 1–2</div>
+        <div class="goal-chevron">&#9656;</div>
+      </div>
+      <div class="goal-body"><div class="goal-body-inner">
+        <p>Keep untrusted networks out of the payment environment and ensure every system starts from a hardened, non-default configuration.</p>
+        <div class="req-chip-list"><div class="req-chip"><span class="rn">1</span>Install and Maintain Network Security Controls</div><div class="req-chip"><span class="rn">2</span>Apply Secure Configurations to All System Components</div></div>
+      </div></div>
+    </div>
+    <div class="goal-row" data-goal="2">
+      <div class="goal-head" onclick="toggleGoal(this)">
+        <div class="goal-num">2</div>
+        <div class="goal-title">Protect Account Data</div>
+        <div class="goal-reqcount">Req 3–4</div>
+        <div class="goal-chevron">&#9656;</div>
+      </div>
+      <div class="goal-body"><div class="goal-body-inner">
+        <p>Wherever card data is stored or travels, it must be minimised, masked, and unreadable to anyone without the encryption key.</p>
+        <div class="req-chip-list"><div class="req-chip"><span class="rn">3</span>Protect Stored Account Data</div><div class="req-chip"><span class="rn">4</span>Protect Cardholder Data with Strong Cryptography During Transmission</div></div>
+      </div></div>
+    </div>
+    <div class="goal-row" data-goal="3">
+      <div class="goal-head" onclick="toggleGoal(this)">
+        <div class="goal-num">3</div>
+        <div class="goal-title">Maintain a Vulnerability Management Programme</div>
+        <div class="goal-reqcount">Req 5–6</div>
+        <div class="goal-chevron">&#9656;</div>
+      </div>
+      <div class="goal-body"><div class="goal-body-inner">
+        <p>Keep malicious software out, and build/patch software so known weaknesses don't sit exposed.</p>
+        <div class="req-chip-list"><div class="req-chip"><span class="rn">5</span>Protect All Systems and Networks from Malicious Software</div><div class="req-chip"><span class="rn">6</span>Develop and Maintain Secure Systems and Software</div></div>
+      </div></div>
+    </div>
+    <div class="goal-row" data-goal="4">
+      <div class="goal-head" onclick="toggleGoal(this)">
+        <div class="goal-num">4</div>
+        <div class="goal-title">Implement Strong Access Control Measures</div>
+        <div class="goal-reqcount">Req 7–9</div>
+        <div class="goal-chevron">&#9656;</div>
+      </div>
+      <div class="goal-body"><div class="goal-body-inner">
+        <p>Only the right people — verified, individually identified, and physically controlled — can reach card data and the systems that hold it.</p>
+        <div class="req-chip-list"><div class="req-chip"><span class="rn">7</span>Restrict Access to System Components and Cardholder Data by Business Need to Know</div><div class="req-chip"><span class="rn">8</span>Identify Users and Authenticate Access to System Components</div><div class="req-chip"><span class="rn">9</span>Restrict Physical Access to Cardholder Data</div></div>
+      </div></div>
+    </div>
+    <div class="goal-row" data-goal="5">
+      <div class="goal-head" onclick="toggleGoal(this)">
+        <div class="goal-num">5</div>
+        <div class="goal-title">Regularly Monitor and Test Networks</div>
+        <div class="goal-reqcount">Req 10–11</div>
+        <div class="goal-chevron">&#9656;</div>
+      </div>
+      <div class="goal-body"><div class="goal-body-inner">
+        <p>Assume something will eventually go wrong: log everything, watch it daily, and actively test defences before attackers do.</p>
+        <div class="req-chip-list"><div class="req-chip"><span class="rn">10</span>Log and Monitor All Access to System Components and Cardholder Data</div><div class="req-chip"><span class="rn">11</span>Test Security of Systems and Networks Regularly</div></div>
+      </div></div>
+    </div>
+    <div class="goal-row" data-goal="6">
+      <div class="goal-head" onclick="toggleGoal(this)">
+        <div class="goal-num">6</div>
+        <div class="goal-title">Maintain an Information Security Policy</div>
+        <div class="goal-reqcount">Req 12</div>
+        <div class="goal-chevron">&#9656;</div>
+      </div>
+      <div class="goal-body"><div class="goal-body-inner">
+        <p>Formal policy, training, and accountability turn technical controls into a sustained organisational programme, not a one-off project.</p>
+        <div class="req-chip-list"><div class="req-chip"><span class="rn">12</span>Support Information Security with Organisational Policies and Programmes</div></div>
+      </div></div>
+    </div></div>
+</section>
+
+<section class="section" id="riskscoring">
+  <div class="eyebrow">03 — Methodology</div>
+  <h2>How risk is scored in your assessment</h2>
+  <p class="lead">Every "Not in Place" (and every control generally) is scored using a simple, standard risk formula: <span class="mono" style="color:var(--text);">Risk Level = Likelihood × Impact</span>. Try it yourself:</p>
+  <div class="risk-calc">
+    <div class="calc-controls">
+      <label>Likelihood — how likely is exploitation?</label>
+      <div class="seg" id="likeSeg">
+        <button data-val="0.1" class="active">Low (0.1)</button>
+        <button data-val="0.5">Medium (0.5)</button>
+        <button data-val="1.0">High (1.0)</button>
+      </div>
+      <label>Impact — how bad if it happens?</label>
+      <div class="seg" id="impSeg">
+        <button data-val="10" class="active">Low (10)</button>
+        <button data-val="50">Medium (50)</button>
+        <button data-val="100">High (100)</button>
+      </div>
+      <div class="heatgrid" id="heatgrid"></div>
+    </div>
+    <div class="calc-result">
+      <div class="calc-result-num" id="calcNum">1</div>
+      <div class="calc-result-label">Risk Level</div>
+      <div class="calc-result-rating" id="calcRating">LOW</div>
+    </div>
+  </div>
+  <div class="pillrow" style="margin-top:20px;">
+    <div class="pill">1–10 = Low</div>
+    <div class="pill">11–50 = Medium</div>
+    <div class="pill">51–100 = High / Critical</div>
+  </div>
+  <p style="margin-top:8px;">In your assessment, every "Not in Place" control still carries this score — it represents the risk your organisation is currently exposed to <em>because</em> the control is missing, not a score against a passing test.</p>
+</section>
+
+<section class="section" id="explorer">
+  <div class="eyebrow">04 — All 68 Controls</div>
+  <h2>Control explorer</h2>
+  <p class="lead">Every control from your assessment, in plain language: what it asks, why it's part of PCI DSS, and what's at stake if it isn't implemented. Filter by requirement, status, or risk — or search directly.</p>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <button class="fbtn status-filter active" data-status="all">All statuses</button>
+      <button class="fbtn status-filter" data-status="In Place">In Place</button>
+      <button class="fbtn status-filter" data-status="Not in Place">Not in Place</button>
+    </div>
+    <div class="filter-group">
+      <button class="fbtn risk-filter active" data-risk="all">All risk</button>
+      <button class="fbtn risk-filter" data-risk="high">High</button>
+      <button class="fbtn risk-filter" data-risk="medium">Medium</button>
+      <button class="fbtn risk-filter" data-risk="low">Low</button>
+    </div>
+    <input class="searchbox" id="searchBox" placeholder="Search controls, e.g. 'encryption', 'MFA', 'logging'...">
+  </div>
+  <div class="filter-bar" style="top:56px;padding-top:0;">
+    <div class="filter-group">
+      <button class="fbtn req-filter active" data-req="all">All requirements</button>
+      <button class="fbtn req-filter" data-req="1">Req 1</button><button class="fbtn req-filter" data-req="2">Req 2</button><button class="fbtn req-filter" data-req="3">Req 3</button><button class="fbtn req-filter" data-req="4">Req 4</button><button class="fbtn req-filter" data-req="5">Req 5</button><button class="fbtn req-filter" data-req="6">Req 6</button><button class="fbtn req-filter" data-req="7">Req 7</button><button class="fbtn req-filter" data-req="8">Req 8</button><button class="fbtn req-filter" data-req="9">Req 9</button><button class="fbtn req-filter" data-req="10">Req 10</button><button class="fbtn req-filter" data-req="11">Req 11</button><button class="fbtn req-filter" data-req="12">Req 12</button>
+    </div>
+  </div>
+  <div class="control-count" id="ctrlCount"></div>
+  <div class="control-list" id="ctrlList">
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="medium"
+         data-search="network security controls – processes & mechanisms are processes and mechanisms for implementing and maintaining network security controls documented, kept current, and known to all affected parties? 1.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.1</div>
+        <div class="ctrl-area">Network Security Controls – Processes & Mechanisms</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for implementing and maintaining network security controls documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A written, current policy tells IT and security teams exactly how firewalls and routers must be configured and maintained, so protection doesn't depend on one person's memory.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without documented rules, configurations drift silently between admins, mistakes go unnoticed, and there is no baseline to audit against — the network perimeter erodes over time without anyone realizing it.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="medium"
+         data-search="network security controls – configuration are network security controls (nscs) configured to filter traffic between trusted and untrusted networks? do rule sets prevent all inbound and outbound traffic not expressly permitted? 1.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.2</div>
+        <div class="ctrl-area">Network Security Controls – Configuration</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are network security controls (NSCs) configured to filter traffic between trusted and untrusted networks? Do rule sets prevent all inbound and outbound traffic not expressly permitted?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Firewalls and other network security controls (NSCs) must actively filter traffic so only explicitly approved connections cross between untrusted networks (like the internet) and trusted ones (like the CDE).</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>A 'default allow' network lets attackers reach payment systems directly from the internet — this is the single most common entry point in real-world card data breaches.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="medium"
+         data-search="network security controls – configuration is inbound internet traffic to the cde restricted to only that which is necessary for the cardholder data environment? 1.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.2</div>
+        <div class="ctrl-area">Network Security Controls – Configuration</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is inbound internet traffic to the CDE restricted to only that which is necessary for the cardholder data environment?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Only traffic genuinely required for payment processing should be allowed into the cardholder data environment (CDE); everything else is denied by default.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Every unnecessary open port or protocol is a door left ajar. Attackers routinely scan for exactly these overlooked openings to gain a foothold.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="high"
+         data-search="network security controls – cde network access is direct public access prohibited between the internet and any component in the cde? 1.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.3</div>
+        <div class="ctrl-area">Network Security Controls – CDE Network Access</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is direct public access prohibited between the internet and any component in the CDE?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>The CDE must never be directly reachable from the public internet — traffic has to pass through controlled, inspected chokepoints.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Direct public exposure of card-processing systems means anyone on the internet can attempt to connect straight to them, skipping every other layer of defense.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.3</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="medium"
+         data-search="network security controls – cde network access are anti-spoofing measures implemented to detect and block forged source ip addresses from entering the network? 1.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.3</div>
+        <div class="ctrl-area">Network Security Controls – CDE Network Access</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are anti-spoofing measures implemented to detect and block forged source IP addresses from entering the network?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Anti-spoofing blocks packets that fake ('spoof') their source address, a technique attackers use to bypass simple filtering rules or hide their origin.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without anti-spoofing, an attacker can impersonate a trusted internal address to slip malicious traffic past the firewall undetected.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="medium"
+         data-search="network security controls – portable devices are nscs implemented on all devices connecting to both untrusted networks and the cde (e.g., employee laptops connecting from home)? 1.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.4</div>
+        <div class="ctrl-area">Network Security Controls – Portable Devices</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are NSCs implemented on all devices connecting to both untrusted networks and the CDE (e.g., employee laptops connecting from home)?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Laptops and other devices that connect both to the internet and to the CDE (e.g., from an employee's home network) need their own local network security controls.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>A remote laptop with no local protection is a soft target — if compromised at home, it becomes a trusted-looking bridge straight into the CDE once it reconnects.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.4</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="1" data-status="In Place" data-risk="medium"
+         data-search="network security controls – review are network security control rule sets reviewed at least every six months? 1.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">1.5</div>
+        <div class="ctrl-area">Network Security Controls – Review</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are network security control rule sets reviewed at least every six months?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Rule sets get stale as business needs change; a six-monthly review catches rules that are overly permissive, outdated, or simply forgotten.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Firewall rules accumulate over years. Without periodic review, 'temporary' access from a long-finished project can remain open indefinitely, quietly widening the attack surface.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 1 · 1.5</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="2" data-status="In Place" data-risk="medium"
+         data-search="secure configurations – processes & mechanisms are processes and mechanisms for applying secure configurations documented, kept current, and known to all affected parties? 2.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">2.1</div>
+        <div class="ctrl-area">Secure Configurations – Processes & Mechanisms</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for applying secure configurations documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented process for secure configuration ensures every new system is hardened the same, repeatable way before it ever touches card data.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, secure setup depends on whoever happens to build the server that day — consistency, and therefore security, becomes a matter of luck.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 2 · 2.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="2" data-status="In Place" data-risk="medium"
+         data-search="secure configurations – system components are configuration standards developed for all system components? do standards address all known security vulnerabilities and are they consistent with industry-accepted system hardening standards? 2.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">2.2</div>
+        <div class="ctrl-area">Secure Configurations – System Components</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are configuration standards developed for ALL system components? Do standards address ALL known security vulnerabilities and are they consistent with industry-accepted system hardening standards?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Configuration standards define exactly how each type of system (servers, databases, network gear) should be locked down, aligned with recognised hardening benchmarks (e.g., CIS, NIST).</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Unhardened, 'out of the box' systems ship with unnecessary services, open ports, and weak settings enabled — each one is a ready-made vulnerability an attacker can exploit.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 2 · 2.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="2" data-status="In Place" data-risk="high"
+         data-search="secure configurations – system components are all vendor-supplied default passwords changed and unnecessary default accounts removed or disabled before installation? 2.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">2.2</div>
+        <div class="ctrl-area">Secure Configurations – System Components</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are all vendor-supplied default passwords changed and unnecessary default accounts removed or disabled before installation?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Vendor default passwords and accounts are publicly documented, so every device must have them changed or disabled before it goes live.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Default credentials (like admin/admin) are the first thing attackers and automated scanning bots try. Leaving them in place is one of the fastest routes to a full system compromise.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 2 · 2.2</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="2" data-status="In Place" data-risk="medium"
+         data-search="secure configurations – system components is only one primary function implemented per server to prevent functions that require different security levels from co-existing? 2.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">2.2</div>
+        <div class="ctrl-area">Secure Configurations – System Components</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is only one primary function implemented per server to prevent functions that require different security levels from co-existing?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Limiting each server to one primary function (e.g., a web server is not also a database server) stops high-security and low-security workloads from sharing the same risk exposure.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Mixing functions on one server means a lower-security service (like a public web app) can become the stepping stone attackers use to reach a higher-security one (like a database holding card numbers).</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 2 · 2.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="2" data-status="In Place" data-risk="medium"
+         data-search="secure configurations – wireless are all wireless environments connected to the cde or that transmit chd configured with industry best practices including changed default passwords, wpa3 or equivalent, and proper encryption? 2.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">2.3</div>
+        <div class="ctrl-area">Secure Configurations – Wireless</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are all wireless environments connected to the CDE or that transmit CHD configured with industry best practices including changed default passwords, WPA3 or equivalent, and proper encryption?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Wireless networks touching the CDE need strong encryption (WPA3 or better) and changed defaults, since wireless signals travel beyond the building's walls.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Weak or default wireless settings let an attacker sitting in a parking lot join the network without ever setting foot inside — a classic and still common breach vector.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 2 · 2.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="medium"
+         data-search="protect stored chd – processes & mechanisms are processes and mechanisms for protecting stored account data documented, kept current, and known to all affected parties? 3.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.1</div>
+        <div class="ctrl-area">Protect Stored CHD – Processes & Mechanisms</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for protecting stored account data documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented process for protecting stored account data ensures encryption, masking, and retention rules are applied consistently everywhere card data lives.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, protection becomes inconsistent across systems — some databases get secured, others (often the ones IT forgot about) don't.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="medium"
+         data-search="protect stored chd – data retention is account data storage kept to a minimum by implementing data retention and disposal policies? is chd that exceeds retention requirements purged at least quarterly? 3.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.2</div>
+        <div class="ctrl-area">Protect Stored CHD – Data Retention</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is account data storage kept to a minimum by implementing data retention and disposal policies? Is CHD that exceeds retention requirements purged at least quarterly?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Keeping stored cardholder data (CHD) to the strict minimum, and purging what's no longer needed, shrinks the amount of data an attacker could ever steal.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Data that isn't deleted just sits there as a growing liability — old, forgotten records are frequently what's actually stolen in a breach, precisely because no one remembered they existed.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="high"
+         data-search="protect stored chd – sad is sensitive authentication data (sad) not retained after authorisation, even if encrypted? this includes full track data, cvv/cvc, and pins. 3.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.3</div>
+        <div class="ctrl-area">Protect Stored CHD – SAD</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is sensitive authentication data (SAD) not retained after authorisation, even if encrypted? This includes full track data, CVV/CVC, and PINs.&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Sensitive authentication data (full magnetic-stripe data, CVV/CVC, PINs) must never be stored after the transaction is authorised — not even encrypted.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>This data is exactly what's needed to counterfeit a physical card or complete fraudulent transactions. Storing it, even briefly, violates PCI DSS outright and creates catastrophic breach potential.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.3</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="high"
+         data-search="protect stored chd – pan rendering is the primary account number (pan) masked when displayed, showing a maximum of the first 6 / last 4 digits? 3.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.4</div>
+        <div class="ctrl-area">Protect Stored CHD – PAN Rendering</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is the primary account number (PAN) masked when displayed, showing a maximum of the first 6 / last 4 digits?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Masking the primary account number (PAN) so only the first 6 / last 4 digits are visible means staff and systems can identify a card without ever seeing the full number.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>A fully visible PAN on a screen, receipt, or report can be photographed, copied, or misused by anyone who has, or gains, that view — insiders included.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.4</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="high"
+         data-search="protect stored chd – encryption is the pan protected wherever it is stored using strong cryptography (aes-256, rsa 2048+, or equivalent)? 3.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.5</div>
+        <div class="ctrl-area">Protect Stored CHD – Encryption</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is the PAN protected wherever it is stored using strong cryptography (AES-256, RSA 2048+, or equivalent)?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Strong cryptography (AES-256, RSA 2048+ or equivalent) must protect the PAN anywhere it is stored, turning stolen data into unusable ciphertext without the key.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Unencrypted stored PANs are a direct payout for an attacker — a single stolen database can yield thousands of usable card numbers ready for fraud.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.5</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="medium"
+         data-search="protect stored chd – key management are cryptographic key management procedures and processes fully documented and implemented? do procedures cover key generation, distribution, storage, access, retirement, and replacement? 3.6">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.6</div>
+        <div class="ctrl-area">Protect Stored CHD – Key Management</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are cryptographic key management procedures and processes fully documented and implemented? Do procedures cover key generation, distribution, storage, access, retirement, and replacement?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Formal key management procedures (generation, distribution, storage, rotation, retirement) ensure the encryption protecting card data is itself trustworthy.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Encryption is only as strong as its key management. Poorly managed keys — shared, unrotated, or loosely stored — can be recovered by an attacker, unlocking every record they were meant to protect.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.6</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="3" data-status="In Place" data-risk="medium"
+         data-search="protect stored chd – key management are cryptographic keys stored securely (e.g., in a hardware security module / hsm) and is access to keys restricted to fewest possible custodians? 3.7">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">3.7</div>
+        <div class="ctrl-area">Protect Stored CHD – Key Management</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are cryptographic keys stored securely (e.g., in a hardware security module / HSM) and is access to keys restricted to fewest possible custodians?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Storing cryptographic keys in a hardware security module (HSM) and restricting access to the fewest possible custodians limits who can ever unlock the encrypted data.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>If encryption keys are stored alongside the data they protect, or shared too widely, a single compromised account can decrypt everything — the encryption becomes security theatre.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 3 · 3.7</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="4" data-status="In Place" data-risk="medium"
+         data-search="protect chd transmission – processes & mechanisms are processes and mechanisms for protecting chd during transmission documented, kept current, and known to all affected parties? 4.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">4.1</div>
+        <div class="ctrl-area">Protect CHD Transmission – Processes & Mechanisms</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for protecting CHD during transmission documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented process ensures every path card data travels over open networks (internet, wireless) is protected the same way, consistently.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, some transmission paths get encrypted and others are missed — often the very connection an attacker chooses to intercept.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 4 · 4.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="4" data-status="In Place" data-risk="high"
+         data-search="protect chd transmission – strong cryptography is strong cryptography used to safeguard pan during transmission over open, public networks (tls 1.2 minimum, tls 1.3 preferred)? are only trusted keys and certificates accepted? 4.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">4.2</div>
+        <div class="ctrl-area">Protect CHD Transmission – Strong Cryptography</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is strong cryptography used to safeguard PAN during transmission over open, public networks (TLS 1.2 minimum, TLS 1.3 preferred)? Are only trusted keys and certificates accepted?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Strong transport encryption (TLS 1.2 minimum, TLS 1.3 preferred) with only trusted certificates protects the PAN as it crosses the internet between systems.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Card data sent in the clear, or over outdated/weak TLS, can be intercepted in transit ('man-in-the-middle') and read or altered by anyone positioned on the network path.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 4 · 4.2</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="4" data-status="In Place" data-risk="high"
+         data-search="protect chd transmission – wireless is pan transmitted in unprotected messages by end-user messaging technologies (email, instant messaging, sms, chat) prohibited? 4.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">4.2</div>
+        <div class="ctrl-area">Protect CHD Transmission – Wireless</div>
+        <div class="status-badge in-place">IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is PAN transmitted in unprotected messages by end-user messaging technologies (email, instant messaging, SMS, chat) prohibited?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Prohibiting PAN transmission via unprotected end-user tools (email, SMS, chat) closes off a channel that was never designed to be secure.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Consumer messaging tools store copies on multiple servers and devices with no encryption guarantees — a card number sent this way can end up copied, cached, and exposed indefinitely.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 4 · 4.2</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Information Security / IT Operations</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="5" data-status="Not in Place" data-risk="medium"
+         data-search="anti-malware – processes & mechanisms are processes and mechanisms for protecting systems against malicious software documented, kept current, and known to all affected parties? 5.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">5.1</div>
+        <div class="ctrl-area">Anti-Malware – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for protecting systems against malicious software documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented anti-malware process ensures protection is deployed and maintained consistently, not left to individual judgment.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, malware protection becomes patchy — new systems get missed, and no one is accountable for keeping it current.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 5 · 5.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="5" data-status="Not in Place" data-risk="medium"
+         data-search="anti-malware – deployment is anti-malware deployed on all systems commonly affected by malicious software and kept current? 5.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">5.2</div>
+        <div class="ctrl-area">Anti-Malware – Deployment</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is anti-malware deployed on all systems commonly affected by malicious software and kept current?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Anti-malware software, kept up to date, needs to run on every system commonly targeted by malicious software.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Unprotected systems are a direct route for malware — including memory-scraping malware built specifically to steal card data as it's processed — to establish itself undetected.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 5 · 5.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="5" data-status="Not in Place" data-risk="medium"
+         data-search="anti-malware – operations are anti-malware mechanisms actively running, unable to be disabled or altered by users (unless specifically authorised by management on a case-by-case basis), and generating audit logs? 5.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">5.3</div>
+        <div class="ctrl-area">Anti-Malware – Operations</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are anti-malware mechanisms actively running, unable to be disabled or altered by users (unless specifically authorised by management on a case-by-case basis), and generating audit logs?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Anti-malware must run continuously, resist being disabled by end users, and log its activity so tampering or failures are visible.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>If anti-malware can be silently switched off, it becomes a false sense of security — attackers and even well-meaning users can disable exactly the protection you're relying on.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 5 · 5.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="5" data-status="Not in Place" data-risk="medium"
+         data-search="anti-malware – phishing are anti-phishing mechanisms implemented to protect personnel against phishing attacks? 5.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">5.4</div>
+        <div class="ctrl-area">Anti-Malware – Phishing</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are anti-phishing mechanisms implemented to protect personnel against phishing attacks?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Anti-phishing controls (email filtering, link protection, user training) defend the entry point attackers use most: tricking a person into clicking or entering credentials.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Phishing remains the top initial-access technique in breaches. Without countermeasures, one convincing email to one employee can hand an attacker credentials straight into the network.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 5 · 5.4</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="6" data-status="Not in Place" data-risk="medium"
+         data-search="secure systems – processes & mechanisms are processes and mechanisms for developing and maintaining secure systems and software documented, kept current, and known to all affected parties? 6.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">6.1</div>
+        <div class="ctrl-area">Secure Systems – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for developing and maintaining secure systems and software documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented secure-development process ensures every application is built with security in mind from the start, not bolted on afterward.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, security depends on individual developers remembering to do the right thing — inconsistently, and usually not under deadline pressure.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 6 · 6.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="6" data-status="Not in Place" data-risk="medium"
+         data-search="secure systems – bespoke / custom software are bespoke and custom software developed securely? are development best practices (owasp, sast, dast, code reviews) applied? 6.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">6.2</div>
+        <div class="ctrl-area">Secure Systems – Bespoke / Custom Software</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are bespoke and custom software developed securely? Are development best practices (OWASP, SAST, DAST, code reviews) applied?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Secure coding practices — OWASP guidance, static/dynamic testing (SAST/DAST), peer code review — catch vulnerabilities before software ever reaches production.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Custom-built software with no security testing regularly ships with flaws like SQL injection or broken authentication — exactly the bugs attackers automate tools to find.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 6 · 6.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="6" data-status="Not in Place" data-risk="medium"
+         data-search="secure systems – vulnerabilities are security vulnerabilities identified and addressed? are vulnerability rankings assigned and critical patches applied within one month? 6.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">6.3</div>
+        <div class="ctrl-area">Secure Systems – Vulnerabilities</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are security vulnerabilities identified and addressed? Are vulnerability rankings assigned and critical patches applied within one month?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A defined process to identify, rank, and patch vulnerabilities (critical patches within one month) keeps known weaknesses from lingering.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Unpatched, publicly known vulnerabilities are the easiest way in — attackers actively scan the internet for systems still missing patches that have been available for months or years.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 6 · 6.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="6" data-status="Not in Place" data-risk="high"
+         data-search="secure systems – web-facing applications are all public-facing web applications protected against web-based attacks (via a web application firewall or automated application vulnerability solution)? 6.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">6.4</div>
+        <div class="ctrl-area">Secure Systems – Web-Facing Applications</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are all public-facing web applications protected against web-based attacks (via a web application firewall or automated application vulnerability solution)?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Public-facing web applications need a web application firewall (WAF) or equivalent automated protection against web-based attacks.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Payment and e-commerce web apps are exposed to the entire internet 24/7 — without a WAF, common attacks like SQL injection or cross-site scripting go straight through to the application.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 6 · 6.4</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="6" data-status="Not in Place" data-risk="medium"
+         data-search="secure systems – change control are all changes to system components in the cde managed through a formal change-control process that includes security impact assessment and testing? 6.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">6.5</div>
+        <div class="ctrl-area">Secure Systems – Change Control</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are all changes to system components in the CDE managed through a formal change-control process that includes security impact assessment and testing?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A formal change-control process — including a security impact review and testing before deployment — ensures changes don't silently introduce new weaknesses.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Uncontrolled changes are a leading cause of security incidents: a 'quick fix' pushed straight to production, with no review, can open a hole that goes unnoticed until it's exploited.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 6 · 6.5</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="7" data-status="Not in Place" data-risk="medium"
+         data-search="access control – processes & mechanisms are processes and mechanisms for restricting access to system components and chd documented, kept current, and known to all affected parties? 7.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">7.1</div>
+        <div class="ctrl-area">Access Control – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for restricting access to system components and CHD documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented access-restriction process ensures 'need to know' is actually enforced, not just assumed.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, access decisions become ad hoc — granted for convenience and rarely reviewed or revoked.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 7 · 7.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="7" data-status="Not in Place" data-risk="high"
+         data-search="access control – access assignment is access to system components and chd restricted to only those whose job requires such access (least privilege / need-to-know)? is this enforced via an access control system? 7.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">7.2</div>
+        <div class="ctrl-area">Access Control – Access Assignment</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is access to system components and CHD restricted to only those whose job requires such access (least privilege / need-to-know)? Is this enforced via an access control system?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Access to systems and cardholder data should be restricted to only those whose job genuinely requires it (least privilege), enforced by an access control system rather than trust.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Overly broad access massively increases the blast radius of any single compromised account — an attacker who steals one set of credentials can reach far more than they should be able to.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 7 · 7.2</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="7" data-status="Not in Place" data-risk="medium"
+         data-search="access control – application & system accounts is access for application ids and system accounts managed and controlled? are default accounts disabled where not required? 7.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">7.3</div>
+        <div class="ctrl-area">Access Control – Application & System Accounts</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is access for application IDs and system accounts managed and controlled? Are default accounts disabled where not required?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Application and system (non-human) accounts need the same discipline as user accounts: managed, restricted, and default accounts disabled when not required.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Service accounts often carry powerful, persistent privileges and are rarely monitored — they're a favourite target because compromise can go unnoticed for a very long time.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 7 · 7.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="8" data-status="Not in Place" data-risk="medium"
+         data-search="user identification – processes & mechanisms are processes and mechanisms for user identification and authentication documented, kept current, and known to all affected parties? 8.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">8.1</div>
+        <div class="ctrl-area">User Identification – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for user identification and authentication documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented process for identifying and authenticating users keeps 'who has access to what' consistent and auditable across the environment.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, authentication practices vary system to system, and there's no reliable way to prove, after an incident, who actually accessed what.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 8 · 8.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="8" data-status="Not in Place" data-risk="high"
+         data-search="user identification – individual ids is a unique id assigned to each user account? are group, shared, or generic ids prohibited (except in documented exceptional circumstances)? 8.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">8.2</div>
+        <div class="ctrl-area">User Identification – Individual IDs</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is a unique ID assigned to each user account? Are group, shared, or generic IDs prohibited (except in documented exceptional circumstances)?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Every user must have their own unique ID — shared or generic logins are prohibited except in narrow, documented cases.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Shared logins make actions impossible to trace to an individual. If misuse occurs, or a breach happens, there is no way to determine who was actually responsible.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 8 · 8.2</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="8" data-status="Not in Place" data-risk="medium"
+         data-search="user identification – authentication is strong authentication established for all users by verifying identity with at least one authentication factor (password/passphrase, token, or biometric)? 8.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">8.3</div>
+        <div class="ctrl-area">User Identification – Authentication</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is strong authentication established for all users by verifying identity with at least one authentication factor (password/passphrase, token, or biometric)?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Strong authentication verifies identity using at least one factor (password, token, or biometric) before granting access.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Weak or absent authentication (blank/default passwords, no verification) lets anyone who reaches the login prompt simply walk in.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 8 · 8.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="8" data-status="Not in Place" data-risk="high"
+         data-search="user identification – mfa is multi-factor authentication (mfa) implemented for all non-console access into the cde? is mfa applied to all remote access and all access by administrators? 8.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">8.4</div>
+        <div class="ctrl-area">User Identification – MFA</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is multi-factor authentication (MFA) implemented for all non-console access into the CDE? Is MFA applied to all remote access and all access by administrators?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Multi-factor authentication (MFA) is required for all non-console and remote access to the CDE, and for all administrator access.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>A stolen or guessed password alone is enough to break into a single-factor system. MFA is the single most effective control against credential-based attacks, which are involved in the majority of breaches.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 8 · 8.4</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="8" data-status="Not in Place" data-risk="medium"
+         data-search="user identification – mfa controls are mfa systems implemented in a way that cannot be bypassed by any user? is mfa replay-resistant? 8.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">8.5</div>
+        <div class="ctrl-area">User Identification – MFA Controls</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are MFA systems implemented in a way that cannot be bypassed by any user? Is MFA replay-resistant?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>MFA implementations must be tamper-resistant and replay-resistant so the second factor can't be bypassed or reused by an attacker.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Poorly implemented MFA (e.g., vulnerable to fatigue attacks or code replay) gives a false sense of protection while remaining bypassable by a determined attacker.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 8 · 8.5</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="8" data-status="Not in Place" data-risk="medium"
+         data-search="user identification – system/application accounts are system and application accounts and their authentication factors managed via policies and controls that prevent misuse? 8.6">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">8.6</div>
+        <div class="ctrl-area">User Identification – System/Application Accounts</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are system and application accounts and their authentication factors managed via policies and controls that prevent misuse?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>System and application account credentials need policies and controls that prevent their misuse, just like human accounts.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Automated accounts often have broad, standing access and rarely-rotated credentials — an attractive, under-monitored target for attackers.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 8 · 8.6</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="9" data-status="Not in Place" data-risk="medium"
+         data-search="physical access – processes & mechanisms are processes and mechanisms for restricting physical access documented, kept current, and known to all affected parties? 9.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">9.1</div>
+        <div class="ctrl-area">Physical Access – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for restricting physical access documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented physical security process ensures restricted areas are consistently protected, not secured by habit or memory.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, physical protections erode — doors get propped open, badges get shared, and no one is accountable for keeping the CDE's physical boundary intact.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 9 · 9.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="9" data-status="Not in Place" data-risk="medium"
+         data-search="physical access – physical controls are physical access controls implemented to restrict access to the cde? are video cameras or other physical access control mechanisms installed to monitor individual physical access points to sensitive areas? 9.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">9.2</div>
+        <div class="ctrl-area">Physical Access – Physical Controls</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are physical access controls implemented to restrict access to the CDE? Are video cameras or other physical access control mechanisms installed to monitor individual physical access points to sensitive areas?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Physical access controls — locks, badge readers, cameras at entry points to sensitive areas — restrict and record who physically enters spaces housing card data or systems.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Anyone who can physically reach a server, POS terminal, or network device can often bypass digital security entirely — plugging in a device, stealing hardware, or accessing an unlocked console.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 9 · 9.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="9" data-status="Not in Place" data-risk="medium"
+         data-search="physical access – visitor access are physical access controls for visitors managed? are visitors authorised, identified with a badge, and escorted? are visitor logs maintained for a minimum of three months? 9.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">9.3</div>
+        <div class="ctrl-area">Physical Access – Visitor Access</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are physical access controls for visitors managed? Are visitors authorised, identified with a badge, and escorted? Are visitor logs maintained for a minimum of three months?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Visitors must be authorised, badged, and escorted, with logs kept for at least three months.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>An unescorted, unidentified 'visitor' is a classic pretext used by attackers (and thieves) to walk into a facility and access sensitive equipment unchallenged.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 9 · 9.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="9" data-status="Not in Place" data-risk="medium"
+         data-search="physical access – media are media with chd physically secured and is access restricted? is an inventory of all media performed at least annually? 9.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">9.4</div>
+        <div class="ctrl-area">Physical Access – Media</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are media with CHD physically secured and is access restricted? Is an inventory of all media performed at least annually?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Physical media containing CHD must be secured, access-restricted, and inventoried at least annually so nothing goes missing unnoticed.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Backup tapes, drives, or printed reports containing card data are easy to steal or lose — without an inventory, a missing item may never even be detected.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 9 · 9.4</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="9" data-status="Not in Place" data-risk="high"
+         data-search="physical access – pos devices are pos devices that capture payment card data via direct physical interaction inspected to detect tampering or substitution? are periodic device inspections performed? 9.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">9.5</div>
+        <div class="ctrl-area">Physical Access – POS Devices</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are POS devices that capture payment card data via direct physical interaction inspected to detect tampering or substitution? Are periodic device inspections performed?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Point-of-sale devices need periodic physical inspection to detect tampering (e.g., skimmers) or substitution with a compromised device.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Card skimmers physically attached to or swapped into POS terminals are a common, low-tech theft method — they capture card data at the exact moment it's entered, undetected unless devices are checked.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 9 · 9.5</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="medium"
+         data-search="logging – processes & mechanisms are processes and mechanisms for logging and monitoring all access to system components and chd documented, kept current, and known to all affected parties? 10.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.1</div>
+        <div class="ctrl-area">Logging – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for logging and monitoring all access to system components and CHD documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented logging and monitoring process ensures every system that touches CHD is actually generating and preserving evidence of activity.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, logging coverage is inconsistent — the one system that gets breached is often the one nobody thought to configure logging on.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="medium"
+         data-search="logging – audit log implementation are audit logs implemented to capture all individual user access to chd, all actions taken by individuals with root or admin privileges, access to all audit trails, invalid access attempts, and changes to authentication mechanisms? 10.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.2</div>
+        <div class="ctrl-area">Logging – Audit Log Implementation</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are audit logs implemented to capture all individual user access to CHD, all actions taken by individuals with root or admin privileges, access to all audit trails, invalid access attempts, and changes to authentication mechanisms?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Audit logs must capture user access to CHD, all admin/root actions, access to the logs themselves, failed access attempts, and changes to authentication.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without comprehensive logs, there's no way to reconstruct what happened during an incident — investigators are left guessing instead of tracing an attacker's actual steps.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="medium"
+         data-search="logging – audit log protection are audit logs protected from modification and destruction (immutable / write-once storage)? 10.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.3</div>
+        <div class="ctrl-area">Logging – Audit Log Protection</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are audit logs protected from modification and destruction (immutable / write-once storage)?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Logs must be protected from modification or deletion (e.g., write-once/immutable storage), so they remain trustworthy evidence.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>An attacker who can edit or erase logs can cover their tracks completely — turning your primary investigative tool into a blank page exactly when you need it most.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="medium"
+         data-search="logging – review are audit logs reviewed at least daily (automated or manual)? are reviews documented? 10.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.4</div>
+        <div class="ctrl-area">Logging – Review</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are audit logs reviewed at least daily (automated or manual)? Are reviews documented?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Daily log review (automated or manual, and documented) is what actually turns collected logs into detected threats.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Logs that are collected but never reviewed provide no real protection — many breaches are discovered months later, even though the evidence was sitting in the logs the whole time.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.4</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="medium"
+         data-search="logging – retention are audit log histories retained for at least 12 months, with the most recent three months available for immediate analysis? 10.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.5</div>
+        <div class="ctrl-area">Logging – Retention</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are audit log histories retained for at least 12 months, with the most recent three months available for immediate analysis?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Retaining at least 12 months of log history, with the most recent 3 months readily available, supports investigations into incidents discovered well after they occurred.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Breaches are frequently discovered long after they happened. If logs have already been purged by then, the investigation — and the ability to know what was actually taken — is severely limited.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.5</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="low"
+         data-search="logging – time synchronisation is time synchronisation technology implemented (ntp) and are time data protected? are all system clocks synchronised to a consistent time source? 10.6">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.6</div>
+        <div class="ctrl-area">Logging – Time Synchronisation</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge low">RISK 5</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is time synchronisation technology implemented (NTP) and are time data protected? Are all system clocks synchronised to a consistent time source?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Synchronised system clocks (via NTP) ensure that timestamps across different logs actually line up, protected against tampering.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>If system clocks drift or are inconsistent, correlating events across multiple logs during an investigation becomes unreliable or impossible — timelines simply won't match.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.6</span>
+          <span>LIKELIHOOD 0.1</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="10" data-status="Not in Place" data-risk="medium"
+         data-search="logging – failure detection are failures of critical security controls detected, alerted, and addressed promptly? does this include failures of firewalls, ids/ips, change-detection mechanisms, anti-malware, and audit logging? 10.7">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">10.7</div>
+        <div class="ctrl-area">Logging – Failure Detection</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are failures of critical security controls detected, alerted, and addressed promptly? Does this include failures of firewalls, IDS/IPS, change-detection mechanisms, anti-malware, and audit logging?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Failures of critical security controls (firewalls, IDS/IPS, anti-malware, logging itself) must be detected, alerted, and addressed promptly.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>A security control that silently fails offers zero protection while everyone assumes it's still working — often the most dangerous state, because the false sense of safety delays any response.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 10 · 10.7</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="11" data-status="Not in Place" data-risk="medium"
+         data-search="security testing – processes & mechanisms are processes and mechanisms for testing security of systems and networks documented, kept current, and known to all affected parties? 11.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">11.1</div>
+        <div class="ctrl-area">Security Testing – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are processes and mechanisms for testing security of systems and networks documented, kept current, and known to all affected parties?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented security-testing process ensures wireless scans, vulnerability scans, and penetration tests actually happen on schedule.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a defined process, testing becomes sporadic or skipped entirely, and there's no way to know whether the environment is actually secure or simply assumed to be.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 11 · 11.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="11" data-status="Not in Place" data-risk="medium"
+         data-search="security testing – wireless scanning are wireless access points scanned quarterly and an incident response process defined for detection of unauthorised wireless devices? 11.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">11.2</div>
+        <div class="ctrl-area">Security Testing – Wireless Scanning</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are wireless access points scanned quarterly and an incident response process defined for detection of unauthorised wireless devices?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Quarterly wireless scanning detects rogue or unauthorised access points connected to the network.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>An employee-installed rogue access point (even well-intentioned) can bypass every other network control, giving an attacker in physical range a direct, invisible path into the network.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 11 · 11.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="11" data-status="Not in Place" data-risk="medium"
+         data-search="security testing – vulnerability scanning are external vulnerability scans performed at least quarterly by an asv (approved scanning vendor)? are internal scans performed quarterly and after significant changes? 11.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">11.3</div>
+        <div class="ctrl-area">Security Testing – Vulnerability Scanning</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are external vulnerability scans performed at least quarterly by an ASV (Approved Scanning Vendor)? Are internal scans performed quarterly and after significant changes?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>External vulnerability scans by an Approved Scanning Vendor (ASV), plus quarterly internal scans, surface exploitable weaknesses before attackers find them.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without regular scanning, known vulnerabilities can sit exposed to the internet indefinitely — exactly the kind of easy target automated attack tools are built to find.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 11 · 11.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="11" data-status="Not in Place" data-risk="high"
+         data-search="security testing – penetration testing is external and internal network penetration testing performed at least annually and after significant changes? does testing include network and application layer tests? is the penetration test conducted by a qualified, independent tester? 11.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">11.4</div>
+        <div class="ctrl-area">Security Testing – Penetration Testing</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge high">RISK 100</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is external and internal network penetration testing performed at least annually and after significant changes? Does testing include network and application layer tests? Is the penetration test conducted by a qualified, independent tester?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Annual (and post-change) penetration testing by a qualified, independent tester actively attempts to break in, testing both network and application layers.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Automated scans only find known issues; a real penetration test finds the exploitable chains and business-logic flaws that scanners miss — the same techniques a real attacker would use.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 11 · 11.4</span>
+          <span>LIKELIHOOD 1.0</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="11" data-status="Not in Place" data-risk="medium"
+         data-search="security testing – change detection is a change-detection mechanism (e.g., file-integrity monitoring) deployed to alert on unauthorised modification of critical files? are comparisons performed at least weekly? 11.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">11.5</div>
+        <div class="ctrl-area">Security Testing – Change Detection</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is a change-detection mechanism (e.g., file-integrity monitoring) deployed to alert on unauthorised modification of critical files? Are comparisons performed at least weekly?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>File-integrity monitoring / change-detection tools alert on unauthorised modification of critical system files, checked at least weekly.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Malware and attackers often modify system files to maintain access. Without change detection, these modifications can persist undetected for months.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 11 · 11.5</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="11" data-status="Not in Place" data-risk="medium"
+         data-search="security testing – unauthorised script detection is a mechanism in place to detect and alert on unauthorised changes to the http headers and contents of payment pages as received by the consumer browser? 11.6">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">11.6</div>
+        <div class="ctrl-area">Security Testing – Unauthorised Script Detection</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is a mechanism in place to detect and alert on unauthorised changes to the HTTP headers and contents of payment pages as received by the consumer browser?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A mechanism to detect unauthorised changes to payment page scripts and headers protects against skimming code injected into the checkout page itself.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>'Digital skimming' (e-skimming/Magecart-style attacks) injects malicious code into checkout pages to steal card data as customers type it in — without detection, this can run silently, harvesting live transactions.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 11 · 11.6</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – processes & mechanisms is an information security policy established, published, maintained, and disseminated to all relevant personnel? 12.1">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.1</div>
+        <div class="ctrl-area">Security Policy – Processes & Mechanisms</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is an information security policy established, published, maintained, and disseminated to all relevant personnel?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A published, maintained information security policy gives every employee a single, authoritative source for what's expected of them.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a formal policy, security expectations exist only informally — inconsistent, hard to enforce, and impossible to hold anyone accountable to.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.1</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – acceptable use is an acceptable use policy for end-user technologies defined and implemented? 12.2">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.2</div>
+        <div class="ctrl-area">Security Policy – Acceptable Use</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is an acceptable use policy for end-user technologies defined and implemented?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>An acceptable use policy sets clear rules for how employees may use end-user technologies (laptops, email, removable media, messaging).</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without clear boundaries, well-meaning employees make risky choices (e.g., using personal devices or public Wi-Fi for CDE access) simply because no one told them not to.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.2</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – risk assessment is a targeted risk analysis performed for each pci dss requirement that provides flexibility for how frequently it is implemented? is a formal risk assessment performed at least annually and when significant changes occur? 12.3">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.3</div>
+        <div class="ctrl-area">Security Policy – Risk Assessment</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is a targeted risk analysis performed for each PCI DSS requirement that provides flexibility for how frequently it is implemented? Is a formal risk assessment performed at least annually and when significant changes occur?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A formal, at-least-annual risk assessment identifies where the organisation is most exposed, and re-checks after significant changes.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without regular risk assessment, security investment gets spent reactively — often after an incident reveals the exact gap a prior assessment would have caught.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.3</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – pci dss compliance management is pci dss compliance managed, including documented roles, responsibilities, and a charter? is executive management responsible for the protection of chd and a pci dss compliance programme? 12.4">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.4</div>
+        <div class="ctrl-area">Security Policy – PCI DSS Compliance Management</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is PCI DSS compliance managed, including documented roles, responsibilities, and a charter? Is executive management responsible for the protection of CHD and a PCI DSS compliance programme?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Formal PCI DSS compliance management — documented roles, responsibilities, and executive accountability — ensures compliance is actively owned, not assumed.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>When no one is explicitly accountable for compliance, it quietly lapses over time as day-to-day priorities take precedence, until the next audit exposes how far the gap has grown.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.4</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – scope is the pci dss scope documented and confirmed at least once every 12 months and upon significant changes to the in-scope environment? 12.5">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.5</div>
+        <div class="ctrl-area">Security Policy – Scope</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is the PCI DSS scope documented and confirmed at least once every 12 months and upon significant changes to the in-scope environment?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Confirming and documenting PCI DSS scope at least annually (and after significant changes) ensures the assessment actually covers every system touching card data.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>An outdated scope misses new systems added since the last review — meaning real gaps in protection go completely unassessed and unaddressed.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.5</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – security awareness is a formal security awareness programme implemented for all personnel? are all personnel trained at hire and at least annually? does training address phishing and social engineering threats? 12.6">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.6</div>
+        <div class="ctrl-area">Security Policy – Security Awareness</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 25</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is a formal security awareness programme implemented for all personnel? Are all personnel trained at hire and at least annually? Does training address phishing and social engineering threats?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A formal security awareness programme trains all personnel at hire and annually, specifically covering phishing and social engineering.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>People remain the most commonly exploited layer of any security programme. Untrained staff are far more likely to click a malicious link, reuse a weak password, or be socially engineered into granting access.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.6</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 50</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="low"
+         data-search="security policy – personnel screening are potential personnel screened prior to hire to minimise the risk of attack from internal sources? does screening include criminal background checks and reference verification? 12.7">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.7</div>
+        <div class="ctrl-area">Security Policy – Personnel Screening</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge low">RISK 10</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are potential personnel screened prior to hire to minimise the risk of attack from internal sources? Does screening include criminal background checks and reference verification?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Screening candidates before hire (criminal background checks, reference verification) reduces the risk of insider threats from the start.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without screening, organisations have no visibility into a new hire's history before granting them access to systems handling sensitive card data.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.7</span>
+          <span>LIKELIHOOD 0.1</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – third-party risk are tpsps (third-party service providers) managed, including a list of tpsps, written agreements including acknowledgement of responsibility for chd, monitoring of tpsp pci dss compliance status, and annual compliance assessments? 12.8">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.8</div>
+        <div class="ctrl-area">Security Policy – Third-Party Risk</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Are TPSPs (third-party service providers) managed, including a list of TPSPs, written agreements including acknowledgement of responsibility for CHD, monitoring of TPSP PCI DSS compliance status, and annual compliance assessments?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>Managing third-party service providers (TPSPs) — a maintained list, written agreements, and monitoring of their PCI DSS status — extends accountability beyond your own walls.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>A vendor with access to your CDE is effectively an extension of your attack surface. An unmanaged, unmonitored third party can be breached and used as the entry point into your environment.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.8</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – tpsp responsibility do tpsps acknowledge in writing their responsibility to protect chd they possess or otherwise store, process, or transmit on behalf of the entity? 12.9">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.9</div>
+        <div class="ctrl-area">Security Policy – TPSP Responsibility</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Do TPSPs acknowledge in writing their responsibility to protect CHD they possess or otherwise store, process, or transmit on behalf of the entity?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>TPSPs must acknowledge in writing their responsibility for protecting any CHD they store, process, or transmit on your behalf.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a written acknowledgement, responsibility for a breach at the vendor becomes disputed and unclear — exactly when clarity and fast action matter most.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.9</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="ctrl-card" data-req="12" data-status="Not in Place" data-risk="medium"
+         data-search="security policy – incident response is an incident response plan implemented? does it include roles, responsibilities, communication procedures, business recovery procedures, legal requirements for reporting compromises, and a process to modify the ir plan in response to lessons learned? 12.10">
+      <div class="ctrl-head" onclick="toggleCtrl(this)">
+        <div class="ctrl-id">12.10</div>
+        <div class="ctrl-area">Security Policy – Incident Response</div>
+        <div class="status-badge not-in-place">NOT IN PLACE</div>
+        <div class="risk-badge medium">RISK 50</div>
+        <div class="ctrl-chevron">&#9656;</div>
+      </div>
+      <div class="ctrl-body"><div class="ctrl-body-inner">
+        <div class="ctrl-q">&ldquo;Is an incident response plan implemented? Does it include roles, responsibilities, communication procedures, business recovery procedures, legal requirements for reporting compromises, and a process to modify the IR plan in response to lessons learned?&rdquo;</div>
+        <div class="ctrl-explain">
+          <div class="blk why"><div class="blk-label">Why this control matters</div><p>A documented incident response plan — roles, communications, recovery steps, legal reporting requirements, and lessons-learned process — ensures a breach is handled fast and correctly, not improvised.</p></div>
+          <div class="blk risk"><div class="blk-label">Risk if not in place</div><p>Without a plan, the first hours of a real incident are lost to confusion: no one knows who to call, what to report, or how to contain the damage — the delay itself often multiplies the eventual cost and exposure.</p></div>
+        </div>
+        <div class="ctrl-meta">
+          <span>REQ 12 · 12.10</span>
+          <span>LIKELIHOOD 0.5</span>
+          <span>IMPACT 100</span>
+          <span>OWNER: Control Owner / Information Security</span>
+        </div>
+      </div></div>
+    </div></div>
+</section>
+
+<section class="section" id="dashboard">
+  <div class="eyebrow">05 — This Organisation</div>
+  <h2>Assessment findings summary</h2>
+  <p class="lead">A rollup of your actual assessment: average risk level per requirement (Likelihood × Impact, 0–100 scale) based on current compliance status.</p>
+  <div class="bars">
+    <div class="bar-row">
+      <div class="bar-label">Req 1 · 7/7 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:43%;background:var(--amber);"></div></div>
+      <div class="bar-val">43</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 2 · 5/5 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--amber);"></div></div>
+      <div class="bar-val">50</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 3 · 7/7 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--red);"></div></div>
+      <div class="bar-val">68</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 4 · 3/3 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--red);"></div></div>
+      <div class="bar-val">75</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 5 · 0/4 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:38%;background:var(--amber);"></div></div>
+      <div class="bar-val">38</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 6 · 0/5 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--amber);"></div></div>
+      <div class="bar-val">50</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 7 · 0/3 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--red);"></div></div>
+      <div class="bar-val">58</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 8 · 0/6 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--red);"></div></div>
+      <div class="bar-val">58</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 9 · 0/5 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--amber);"></div></div>
+      <div class="bar-val">50</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 10 · 0/7 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:36%;background:var(--amber);"></div></div>
+      <div class="bar-val">36</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 11 · 0/6 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:54%;background:var(--red);"></div></div>
+      <div class="bar-val">54</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Req 12 · 0/10 in place</div>
+      <div class="bar-track"><div class="bar-fill" style="width:36%;background:var(--amber);"></div></div>
+      <div class="bar-val">36</div>
+    </div></div>
+  <div class="donut-wrap">
+    <div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--teal);"></span>22 controls in place</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--red);"></span>46 controls not in place</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--amber);"></span>13 scored High/Critical risk (51–100)</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--blue);"></span>53 scored Medium risk (11–50)</div>
+    </div>
+  </div>
+  <p style="margin-top:20px;">Requirements 5 through 12 — anti-malware, secure development, access control, authentication, physical security, logging, testing, and policy — currently show no controls in place. These form the priority remediation backlog in the Risk Mitigation Plan tab of the source workbook.</p>
+</section>
+
+<section class="section" id="quiz">
+  <div class="eyebrow">06 — Check Your Understanding</div>
+  <h2>Knowledge check</h2>
+  <p class="lead">Five quick questions. Pick an answer to see instant feedback.</p>
+  <div class="quiz-score-bar"><span class="mono" style="color:var(--text-dim);font-size:13px;">SCORE</span><span class="mono" id="quizScore" style="color:var(--teal);font-size:16px;font-weight:600;">0 / 5</span></div>
+  
+    <div class="quiz-card" data-qi="0" data-correct="1">
+      <div class="quiz-q">1. Sensitive Authentication Data (SAD), like a card's CVV, may be stored after the transaction is authorised as long as it's encrypted.</div>
+      <div class="quiz-opts"><button class="quiz-opt" onclick="answerQuiz(this,0,0)">True</button><button class="quiz-opt" onclick="answerQuiz(this,0,1)">False</button></div>
+      <div class="quiz-fb" id="fb-0">False. SAD must never be stored post-authorisation, encrypted or not — it's exactly the data needed to commit fraud, so PCI DSS prohibits retaining it at all.</div>
+    </div>
+    <div class="quiz-card" data-qi="1" data-correct="1">
+      <div class="quiz-q">2. What does 'Risk Level' represent in this assessment?</div>
+      <div class="quiz-opts"><button class="quiz-opt" onclick="answerQuiz(this,1,0)">A pass/fail grade for each control</button><button class="quiz-opt" onclick="answerQuiz(this,1,1)">Likelihood × Impact — the exposure created by a control's current status</button><button class="quiz-opt" onclick="answerQuiz(this,1,2)">How expensive the control was to implement</button></div>
+      <div class="quiz-fb" id="fb-1">Risk Level = Likelihood × Impact. It quantifies exposure, not effort or cost — a High likelihood, High impact gap scores up to 100.</div>
+    </div>
+    <div class="quiz-card" data-qi="2" data-correct="0">
+      <div class="quiz-q">3. Which control most directly reduces the damage a single stolen password can cause?</div>
+      <div class="quiz-opts"><button class="quiz-opt" onclick="answerQuiz(this,2,0)">Multi-factor authentication (Req 8.4)</button><button class="quiz-opt" onclick="answerQuiz(this,2,1)">Wireless scanning (Req 11.2)</button><button class="quiz-opt" onclick="answerQuiz(this,2,2)">Data retention policy (Req 3.2)</button></div>
+      <div class="quiz-fb" id="fb-2">MFA (Req 8.4) means a password alone isn't enough to get in — it's the single most effective control against credential-based attacks.</div>
+    </div>
+    <div class="quiz-card" data-qi="3" data-correct="1">
+      <div class="quiz-q">4. Why does PCI DSS require masking the PAN (showing only first 6 / last 4 digits) even for authorised staff?</div>
+      <div class="quiz-opts"><button class="quiz-opt" onclick="answerQuiz(this,3,0)">To save screen space</button><button class="quiz-opt" onclick="answerQuiz(this,3,1)">To limit exposure even to people who are supposed to have some access</button><button class="quiz-opt" onclick="answerQuiz(this,3,2)">It's only a formatting preference, not a security control</button></div>
+      <div class="quiz-fb" id="fb-3">Masking limits exposure of the full number even to authorised staff — reducing the chance of casual copying, photographing, or misuse, intentional or not.</div>
+    </div>
+    <div class="quiz-card" data-qi="4" data-correct="1">
+      <div class="quiz-q">5. An organisation has good firewalls (Req 1–2) but no logging or monitoring (Req 10) in place. What's the main risk?</div>
+      <div class="quiz-opts"><button class="quiz-opt" onclick="answerQuiz(this,4,0)">None — firewalls alone are sufficient</button><button class="quiz-opt" onclick="answerQuiz(this,4,1)">If an attacker does get in, there will be no record to detect or investigate it</button><button class="quiz-opt" onclick="answerQuiz(this,4,2)">Logging is optional under PCI DSS v4.0</button></div>
+      <div class="quiz-fb" id="fb-4">No control blocks 100% of attacks. Without logging and monitoring, a breach can go undetected for months, with no evidence trail to understand what happened.</div>
+    </div>
+</section>
+
+<section class="section" id="glossary">
+  <div class="eyebrow">07 — Reference</div>
+  <h2>Glossary</h2>
+  <p class="lead">Every acronym and term used throughout this training and the source assessment, in one place.</p>
+  <input class="gloss-search" id="glossSearch" placeholder="Search glossary — e.g. 'MFA', 'PAN', 'segmentation'...">
+  <div class="gloss-grid" id="glossGrid">
+    <div class="gloss-item" data-search="cde cardholder data environment the people, processes, and technology that store, process, or transmit cardholder data or sensitive authentication data, plus anything connected to or that could impact the security of that data.">
+      <div class="gloss-term">CDE</div>
+      <div class="gloss-full">Cardholder Data Environment</div>
+      <p class="gloss-def">The people, processes, and technology that store, process, or transmit cardholder data or sensitive authentication data, plus anything connected to or that could impact the security of that data.</p>
+    </div>
+    <div class="gloss-item" data-search="chd cardholder data at minimum, the full primary account number (pan). may also include cardholder name, expiration date, or service code when stored with the pan.">
+      <div class="gloss-term">CHD</div>
+      <div class="gloss-full">Cardholder Data</div>
+      <p class="gloss-def">At minimum, the full primary account number (PAN). May also include cardholder name, expiration date, or service code when stored with the PAN.</p>
+    </div>
+    <div class="gloss-item" data-search="sad sensitive authentication data security-related data used to authenticate a card transaction — full track/chip data, card verification codes (cvv/cvc), and pins. must never be stored after authorisation.">
+      <div class="gloss-term">SAD</div>
+      <div class="gloss-full">Sensitive Authentication Data</div>
+      <p class="gloss-def">Security-related data used to authenticate a card transaction — full track/chip data, card verification codes (CVV/CVC), and PINs. Must never be stored after authorisation.</p>
+    </div>
+    <div class="gloss-item" data-search="pan primary account number the unique payment card number (typically 14–19 digits) that identifies the issuer and the cardholder account. the core piece of data pci dss protects.">
+      <div class="gloss-term">PAN</div>
+      <div class="gloss-full">Primary Account Number</div>
+      <p class="gloss-def">The unique payment card number (typically 14–19 digits) that identifies the issuer and the cardholder account. The core piece of data PCI DSS protects.</p>
+    </div>
+    <div class="gloss-item" data-search="pci dss payment card industry data security standard a set of 12 security requirements, maintained by the pci security standards council, that any organisation storing, processing, or transmitting card data must meet.">
+      <div class="gloss-term">PCI DSS</div>
+      <div class="gloss-full">Payment Card Industry Data Security Standard</div>
+      <p class="gloss-def">A set of 12 security requirements, maintained by the PCI Security Standards Council, that any organisation storing, processing, or transmitting card data must meet.</p>
+    </div>
+    <div class="gloss-item" data-search="pci ssc pci security standards council the industry body — founded by visa, mastercard, american express, discover, and jcb — that develops and maintains pci dss and related standards.">
+      <div class="gloss-term">PCI SSC</div>
+      <div class="gloss-full">PCI Security Standards Council</div>
+      <p class="gloss-def">The industry body — founded by Visa, Mastercard, American Express, Discover, and JCB — that develops and maintains PCI DSS and related standards.</p>
+    </div>
+    <div class="gloss-item" data-search="qsa qualified security assessor an individual certified by the pci ssc to formally assess an organisation's compliance with pci dss, typically producing a report on compliance (roc).">
+      <div class="gloss-term">QSA</div>
+      <div class="gloss-full">Qualified Security Assessor</div>
+      <p class="gloss-def">An individual certified by the PCI SSC to formally assess an organisation's compliance with PCI DSS, typically producing a Report on Compliance (ROC).</p>
+    </div>
+    <div class="gloss-item" data-search="asv approved scanning vendor a company certified by the pci ssc to perform the external vulnerability scans pci dss requires at least quarterly.">
+      <div class="gloss-term">ASV</div>
+      <div class="gloss-full">Approved Scanning Vendor</div>
+      <p class="gloss-def">A company certified by the PCI SSC to perform the external vulnerability scans PCI DSS requires at least quarterly.</p>
+    </div>
+    <div class="gloss-item" data-search="saq self-assessment questionnaire a validation tool used by eligible merchants to self-report pci dss compliance rather than undergo a full external qsa assessment. different types (a, a-ep, b, c, d, etc.) apply based on how the organisation handles card data.">
+      <div class="gloss-term">SAQ</div>
+      <div class="gloss-full">Self-Assessment Questionnaire</div>
+      <p class="gloss-def">A validation tool used by eligible merchants to self-report PCI DSS compliance rather than undergo a full external QSA assessment. Different types (A, A-EP, B, C, D, etc.) apply based on how the organisation handles card data.</p>
+    </div>
+    <div class="gloss-item" data-search="roc report on compliance the detailed report a qsa produces after formally assessing an organisation against all applicable pci dss requirements — typically required for larger merchants and all service providers.">
+      <div class="gloss-term">ROC</div>
+      <div class="gloss-full">Report on Compliance</div>
+      <p class="gloss-def">The detailed report a QSA produces after formally assessing an organisation against all applicable PCI DSS requirements — typically required for larger merchants and all service providers.</p>
+    </div>
+    <div class="gloss-item" data-search="tls transport layer security the cryptographic protocol that encrypts data travelling over a network (the successor to ssl). pci dss requires tls 1.2 or higher to protect card data in transit.">
+      <div class="gloss-term">TLS</div>
+      <div class="gloss-full">Transport Layer Security</div>
+      <p class="gloss-def">The cryptographic protocol that encrypts data travelling over a network (the successor to SSL). PCI DSS requires TLS 1.2 or higher to protect card data in transit.</p>
+    </div>
+    <div class="gloss-item" data-search="hsm hardware security module a dedicated, tamper-resistant physical device used to generate, store, and manage cryptographic keys, keeping them isolated from the systems that use them.">
+      <div class="gloss-term">HSM</div>
+      <div class="gloss-full">Hardware Security Module</div>
+      <p class="gloss-def">A dedicated, tamper-resistant physical device used to generate, store, and manage cryptographic keys, keeping them isolated from the systems that use them.</p>
+    </div>
+    <div class="gloss-item" data-search="mfa multi-factor authentication authentication requiring two or more independent factors (something you know, have, or are) before granting access — dramatically reducing the risk of a stolen password alone leading to a breach.">
+      <div class="gloss-term">MFA</div>
+      <div class="gloss-full">Multi-Factor Authentication</div>
+      <p class="gloss-def">Authentication requiring two or more independent factors (something you know, have, or are) before granting access — dramatically reducing the risk of a stolen password alone leading to a breach.</p>
+    </div>
+    <div class="gloss-item" data-search="nsc network security controls technologies (firewalls, cloud security groups, routers with acls, etc.) that enforce network traffic policies between segments of differing trust levels.">
+      <div class="gloss-term">NSC</div>
+      <div class="gloss-full">Network Security Controls</div>
+      <p class="gloss-def">Technologies (firewalls, cloud security groups, routers with ACLs, etc.) that enforce network traffic policies between segments of differing trust levels.</p>
+    </div>
+    <div class="gloss-item" data-search="waf web application firewall a security control that filters, monitors, and blocks malicious http traffic to and from a web application, defending against attacks like sql injection and cross-site scripting.">
+      <div class="gloss-term">WAF</div>
+      <div class="gloss-full">Web Application Firewall</div>
+      <p class="gloss-def">A security control that filters, monitors, and blocks malicious HTTP traffic to and from a web application, defending against attacks like SQL injection and cross-site scripting.</p>
+    </div>
+    <div class="gloss-item" data-search="fim file integrity monitoring a change-detection technology that alerts when critical system or configuration files are modified without authorisation — often an early sign of compromise.">
+      <div class="gloss-term">FIM</div>
+      <div class="gloss-full">File Integrity Monitoring</div>
+      <p class="gloss-def">A change-detection technology that alerts when critical system or configuration files are modified without authorisation — often an early sign of compromise.</p>
+    </div>
+    <div class="gloss-item" data-search="tpsp third-party service provider an external organisation (payment processor, hosting provider, cloud vendor, etc.) that stores, processes, or transmits card data on behalf of another entity, or could affect the security of that data.">
+      <div class="gloss-term">TPSP</div>
+      <div class="gloss-full">Third-Party Service Provider</div>
+      <p class="gloss-def">An external organisation (payment processor, hosting provider, cloud vendor, etc.) that stores, processes, or transmits card data on behalf of another entity, or could affect the security of that data.</p>
+    </div>
+    <div class="gloss-item" data-search="tokenisation tokenisation replacing a pan with a non-sensitive substitute value (a token) that has no exploitable value outside the specific system that issued it, reducing the scope of systems that handle real card data.">
+      <div class="gloss-term">Tokenisation</div>
+      <div class="gloss-full">Tokenisation</div>
+      <p class="gloss-def">Replacing a PAN with a non-sensitive substitute value (a token) that has no exploitable value outside the specific system that issued it, reducing the scope of systems that handle real card data.</p>
+    </div>
+    <div class="gloss-item" data-search="network segmentation network segmentation isolating the cde from the rest of an organisation's network so that only necessary, controlled traffic can reach systems that handle card data — shrinking the pci dss assessment scope and the attack surface.">
+      <div class="gloss-term">Network Segmentation</div>
+      <div class="gloss-full">Network Segmentation</div>
+      <p class="gloss-def">Isolating the CDE from the rest of an organisation's network so that only necessary, controlled traffic can reach systems that handle card data — shrinking the PCI DSS assessment scope and the attack surface.</p>
+    </div>
+    <div class="gloss-item" data-search="least privilege least privilege the principle that a user or system account should have only the minimum access necessary to perform its job — nothing more.">
+      <div class="gloss-term">Least Privilege</div>
+      <div class="gloss-full">Least Privilege</div>
+      <p class="gloss-def">The principle that a user or system account should have only the minimum access necessary to perform its job — nothing more.</p>
+    </div>
+    <div class="gloss-item" data-search="sast / dast static / dynamic application security testing automated techniques for finding vulnerabilities in software: sast analyses source code without running it; dast tests a running application from the outside, the way an attacker would.">
+      <div class="gloss-term">SAST / DAST</div>
+      <div class="gloss-full">Static / Dynamic Application Security Testing</div>
+      <p class="gloss-def">Automated techniques for finding vulnerabilities in software: SAST analyses source code without running it; DAST tests a running application from the outside, the way an attacker would.</p>
+    </div>
+    <div class="gloss-item" data-search="owasp open worldwide application security project a nonprofit community that publishes widely-used, freely available resources on web application security, including the well-known owasp top 10 list of common vulnerabilities.">
+      <div class="gloss-term">OWASP</div>
+      <div class="gloss-full">Open Worldwide Application Security Project</div>
+      <p class="gloss-def">A nonprofit community that publishes widely-used, freely available resources on web application security, including the well-known OWASP Top 10 list of common vulnerabilities.</p>
+    </div>
+    <div class="gloss-item" data-search="e-skimming / magecart e-skimming / magecart a category of attack where malicious code is injected into a website's checkout page to silently capture payment details as customers type them in.">
+      <div class="gloss-term">E-Skimming / Magecart</div>
+      <div class="gloss-full">E-Skimming / Magecart</div>
+      <p class="gloss-def">A category of attack where malicious code is injected into a website's checkout page to silently capture payment details as customers type them in.</p>
+    </div>
+    <div class="gloss-item" data-search="ids / ips intrusion detection / prevention system technology that monitors network or system activity for malicious behaviour (ids) and can automatically block it (ips).">
+      <div class="gloss-term">IDS / IPS</div>
+      <div class="gloss-full">Intrusion Detection / Prevention System</div>
+      <p class="gloss-def">Technology that monitors network or system activity for malicious behaviour (IDS) and can automatically block it (IPS).</p>
+    </div>
+    <div class="gloss-item" data-search="ntp network time protocol the standard protocol used to synchronise clocks across computer systems, ensuring timestamps in logs from different systems can be reliably compared.">
+      <div class="gloss-term">NTP</div>
+      <div class="gloss-full">Network Time Protocol</div>
+      <p class="gloss-def">The standard protocol used to synchronise clocks across computer systems, ensuring timestamps in logs from different systems can be reliably compared.</p>
+    </div>
+    <div class="gloss-item" data-search="compensating control compensating control an alternative control used when an organisation cannot meet a pci dss requirement exactly as stated, but implements another control that sufficiently addresses the same risk — documented in a compensating control worksheet (ccw).">
+      <div class="gloss-term">Compensating Control</div>
+      <div class="gloss-full">Compensating Control</div>
+      <p class="gloss-def">An alternative control used when an organisation cannot meet a PCI DSS requirement exactly as stated, but implements another control that sufficiently addresses the same risk — documented in a Compensating Control Worksheet (CCW).</p>
+    </div>
+    <div class="gloss-item" data-search="encryption at rest / in transit encryption at rest / in transit 'at rest' means data is encrypted while stored (on disk, in a database); 'in transit' means it's encrypted while moving across a network. pci dss requires both for cardholder data.">
+      <div class="gloss-term">Encryption at Rest / in Transit</div>
+      <div class="gloss-full">Encryption at Rest / in Transit</div>
+      <p class="gloss-def">'At rest' means data is encrypted while stored (on disk, in a database); 'in transit' means it's encrypted while moving across a network. PCI DSS requires both for cardholder data.</p>
+    </div>
+    <div class="gloss-item" data-search="vulnerability scan vs. penetration test vulnerability scan vs. penetration test a vulnerability scan is an automated check for known weaknesses; a penetration test is a hands-on, human-led attempt to actively exploit weaknesses, including ones automated tools would miss.">
+      <div class="gloss-term">Vulnerability Scan vs. Penetration Test</div>
+      <div class="gloss-full">Vulnerability Scan vs. Penetration Test</div>
+      <p class="gloss-def">A vulnerability scan is an automated check for known weaknesses; a penetration test is a hands-on, human-led attempt to actively exploit weaknesses, including ones automated tools would miss.</p>
+    </div>
+    <div class="gloss-item" data-search="change control change control a formal process for reviewing, approving, testing, and documenting changes to systems before they go live, to prevent uncontrolled changes from introducing new risk.">
+      <div class="gloss-term">Change Control</div>
+      <div class="gloss-full">Change Control</div>
+      <p class="gloss-def">A formal process for reviewing, approving, testing, and documenting changes to systems before they go live, to prevent uncontrolled changes from introducing new risk.</p>
+    </div>
+    <div class="gloss-item" data-search="data retention policy data retention policy a documented rule for how long data may be kept before it must be securely deleted — for cardholder data, pci dss requires keeping only what's needed, for as long as it's needed.">
+      <div class="gloss-term">Data Retention Policy</div>
+      <div class="gloss-full">Data Retention Policy</div>
+      <p class="gloss-def">A documented rule for how long data may be kept before it must be securely deleted — for cardholder data, PCI DSS requires keeping only what's needed, for as long as it's needed.</p>
+    </div>
+    <div class="gloss-item" data-search="merchant level merchant level a classification (level 1–4) based primarily on annual transaction volume that determines the depth of pci dss validation a merchant must undergo (e.g., full qsa assessment vs. a self-assessment questionnaire).">
+      <div class="gloss-term">Merchant Level</div>
+      <div class="gloss-full">Merchant Level</div>
+      <p class="gloss-def">A classification (Level 1–4) based primarily on annual transaction volume that determines the depth of PCI DSS validation a merchant must undergo (e.g., full QSA assessment vs. a self-assessment questionnaire).</p>
+    </div></div>
+</section>
+
+<footer>
+  BUILT FROM: PCI DSS v4.0 Risk Assessment &amp; Compliance Questionnaire · 68 controls · Generated as an interactive training reference. Not a substitute for formal QSA guidance.
+</footer>
+</main>
+</div>
+
+<script>
+// ---------- nav active state + progress ----------
+const sections = Array.from(document.querySelectorAll('main .section, main .hero'));
+const navlinks = Array.from(document.querySelectorAll('.navlink'));
+
+function onScroll(){
+  let idx = 0;
+  const scrollPos = window.scrollY + 140;
+  sections.forEach((s,i)=>{ if(s.offsetTop <= scrollPos) idx = i; });
+  navlinks.forEach(l=>l.classList.remove('active'));
+  if(navlinks[idx]) navlinks[idx].classList.add('active');
+
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docH>0 ? Math.min(100, Math.round((window.scrollY/docH)*100)) : 0;
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressPct').textContent = pct+'% viewed';
+}
+window.addEventListener('scroll', onScroll, {passive:true});
+onScroll();
+
+// ---------- goals accordion ----------
+function toggleGoal(headEl){
+  const row = headEl.parentElement;
+  row.classList.toggle('open');
+}
+
+// ---------- risk calculator ----------
+const likeSeg = document.getElementById('likeSeg');
+const impSeg = document.getElementById('impSeg');
+let likeVal = 0.1, impVal = 10;
+
+function setSeg(seg, val, setter){
+  Array.from(seg.children).forEach(b=>{
+    b.classList.toggle('active', parseFloat(b.dataset.val)===val);
+  });
+  setter(val);
+  updateCalc();
+}
+likeSeg.addEventListener('click', e=>{
+  if(e.target.tagName==='BUTTON'){ likeVal = parseFloat(e.target.dataset.val); setSeg(likeSeg, likeVal, v=>likeVal=v); }
+});
+impSeg.addEventListener('click', e=>{
+  if(e.target.tagName==='BUTTON'){ impVal = parseFloat(e.target.dataset.val); setSeg(impSeg, impVal, v=>impVal=v); }
+});
+
+function updateCalc(){
+  const result = Math.round(likeVal*impVal);
+  document.getElementById('calcNum').textContent = result;
+  const ratingEl = document.getElementById('calcRating');
+  let band, color, bg;
+  if(result>=51){ band='HIGH / CRITICAL'; color='var(--red)'; bg='var(--red-dim)'; }
+  else if(result>=11){ band='MEDIUM'; color='var(--amber)'; bg='var(--amber-dim)'; }
+  else { band='LOW'; color='#6FCF7A'; bg='#1B2A1E'; }
+  ratingEl.textContent = band;
+  ratingEl.style.color = color;
+  ratingEl.style.background = bg;
+  document.getElementById('calcNum').style.color = color;
+}
+
+// heat grid build
+const heatgrid = document.getElementById('heatgrid');
+const likes = [0.1,0.5,1.0], imps=[10,50,100];
+imps.slice().reverse().forEach(im=>{
+  likes.forEach(lk=>{
+    const v = Math.round(lk*im);
+    const cell = document.createElement('div');
+    cell.className='heatcell';
+    let bg;
+    if(v>=51) bg='rgba(225,72,63,0.35)';
+    else if(v>=11) bg='rgba(240,168,58,0.3)';
+    else bg='rgba(63,199,176,0.25)';
+    cell.style.background = bg;
+    cell.textContent = v;
+    heatgrid.appendChild(cell);
+  });
+});
+updateCalc();
+
+// ---------- control explorer ----------
+function toggleCtrl(headEl){
+  headEl.parentElement.classList.toggle('open');
+}
+
+const ctrlList = document.getElementById('ctrlList');
+const ctrlCards = Array.from(ctrlList.querySelectorAll('.ctrl-card'));
+const ctrlCount = document.getElementById('ctrlCount');
+
+let activeStatus = 'all', activeRisk = 'all', activeReq = 'all', activeSearch = '';
+
+function applyFilters(){
+  let visible = 0;
+  ctrlCards.forEach(card=>{
+    const matchStatus = activeStatus==='all' || card.dataset.status===activeStatus;
+    const matchRisk = activeRisk==='all' || card.dataset.risk===activeRisk;
+    const matchReq = activeReq==='all' || card.dataset.req===activeReq;
+    const matchSearch = activeSearch==='' || card.dataset.search.includes(activeSearch);
+    const show = matchStatus && matchRisk && matchReq && matchSearch;
+    card.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  ctrlCount.textContent = `Showing ${visible} of ${ctrlCards.length} controls`;
+}
+
+document.querySelectorAll('.status-filter').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.status-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeStatus = btn.dataset.status;
+    applyFilters();
+  });
+});
+document.querySelectorAll('.risk-filter').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.risk-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeRisk = btn.dataset.risk;
+    applyFilters();
+  });
+});
+document.querySelectorAll('.req-filter').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.req-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeReq = btn.dataset.req;
+    applyFilters();
+  });
+});
+document.getElementById('searchBox').addEventListener('input', e=>{
+  activeSearch = e.target.value.toLowerCase().trim();
+  applyFilters();
+});
+applyFilters();
+
+// ---------- quiz ----------
+let quizScore = 0;
+let answeredSet = new Set();
+function answerQuiz(btn, qIndex, optIndex){
+  if(answeredSet.has(qIndex)) return;
+  answeredSet.add(qIndex);
+  const card = btn.closest('.quiz-card');
+  const correct = parseInt(card.dataset.correct,10);
+  const opts = card.querySelectorAll('.quiz-opt');
+  opts.forEach((o,i)=>{
+    o.style.pointerEvents='none';
+    if(i===correct) o.classList.add('correct');
+    else if(i===optIndex) o.classList.add('wrong');
+  });
+  if(optIndex===correct) quizScore++;
+  document.getElementById('quizScore').textContent = quizScore + ' / ' + document.querySelectorAll('.quiz-card').length;
+  const fb = card.querySelector('.quiz-fb');
+  fb.style.display = 'block';
+}
+
+// ---------- glossary search ----------
+const glossSearch = document.getElementById('glossSearch');
+const glossItems = Array.from(document.querySelectorAll('.gloss-item'));
+glossSearch.addEventListener('input', e=>{
+  const q = e.target.value.toLowerCase().trim();
+  glossItems.forEach(item=>{
+    item.style.display = (q==='' || item.dataset.search.includes(q)) ? '' : 'none';
+  });
+});
+
+</script>
+</body>
+</html>
